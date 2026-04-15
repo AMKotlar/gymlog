@@ -48,18 +48,16 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   useEffect(() => {
     if (!open || !exercise?.id || !userId) return
 
-    const start = new Date()
-    start.setHours(0, 0, 0, 0)
-    const end = new Date()
-    end.setHours(23, 59, 59, 999)
+    const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
+    const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
 
     supabase
       .from('sets')
       .select('*')
       .eq('user_id', userId)
       .eq('exercise_id', exercise.id)
-      .gte('logged_at', start.toISOString())
-      .lte('logged_at', end.toISOString())
+      .gte('logged_at', todayStart)
+      .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false })
       .then(({ data }) => {
         const entries = data ?? []
@@ -99,10 +97,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       user_id: userId,
       exercise_id: exercise.id,
       exercise_name: exercise.name,
-      weight,
-      reps,
-      rir,
-      rest_seconds: restSeconds,
+      weight: Number(weight),
+      reps: Number(reps),
+      rir: Number.parseInt(rir, 10),
+      rest_seconds: Number(restSeconds),
       logged_at: new Date().toISOString(),
     })
     setSaving(false)

@@ -3,14 +3,6 @@ import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
 import { supabase } from '../supabase'
 
-function toRange(date = new Date()) {
-  const start = new Date(date)
-  start.setHours(0, 0, 0, 0)
-  const end = new Date(date)
-  end.setHours(23, 59, 59, 999)
-  return { start: start.toISOString(), end: end.toISOString() }
-}
-
 function rirBadgeStyle(rir) {
   if (rir === 0) return 'bg-red-500/20 text-red-300'
   if (rir === 1) return 'bg-amber-500/20 text-amber-300'
@@ -23,13 +15,14 @@ function Home({ user }) {
   const [exercise, setExercise] = useState(null)
 
   const fetchTodaySets = async () => {
-    const { start, end } = toRange()
+    const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
+    const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
     const { data } = await supabase
       .from('sets')
       .select('*')
       .eq('user_id', user.id)
-      .gte('logged_at', start)
-      .lte('logged_at', end)
+      .gte('logged_at', todayStart)
+      .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false })
     setSets(data ?? [])
   }
