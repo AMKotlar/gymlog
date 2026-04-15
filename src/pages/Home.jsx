@@ -75,8 +75,8 @@ function Home({ user }) {
                   style={{ minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.4)', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', cursor: 'pointer' }}
                   aria-label="Delete set"
                 >
-                  <span style={{ fontSize: '20px', lineHeight: 1, fontWeight: 700 }} aria-hidden="true">
-                    ✕
+                  <span style={{ fontSize: '20px', lineHeight: 1, fontWeight: 700, fontFamily: 'system-ui, sans-serif' }} aria-hidden="true">
+                    X
                   </span>
                 </button>
               </div>
