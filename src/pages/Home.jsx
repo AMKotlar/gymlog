@@ -72,7 +72,7 @@ function Home({ user }) {
                 <button
                   type="button"
                   onClick={() => deleteSet(set.id)}
-                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-red-400/40 bg-red-500/15 text-red-300 hover:bg-red-500/25 hover:text-red-200"
+                  style={{ minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.4)', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', cursor: 'pointer' }}
                   aria-label="Delete set"
                 >
                   <svg
