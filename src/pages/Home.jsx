@@ -62,7 +62,7 @@ function Home({ user }) {
               <div>
                 <p>{set.exercise_name}</p>
                 <p className="text-sm text-white/60">
-                  {set.weight} × {set.reps} · Rest {set.rest_seconds}s
+                  {set.weight} {'\u00D7'} {set.reps} {'\u00B7'} Rest {set.rest_seconds}s
                 </p>
               </div>
               <div className="ml-2 flex shrink-0 items-center gap-2">
