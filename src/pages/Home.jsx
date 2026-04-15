@@ -65,17 +65,26 @@ function Home({ user }) {
                   {set.weight} × {set.reps} · Rest {set.rest_seconds}s
                 </p>
               </div>
-              <div className="ml-2 flex items-center gap-2">
+              <div className="ml-2 flex shrink-0 items-center gap-2">
                 <span className={`rounded-full px-2 py-1 text-xs ${rirBadgeStyle(set.rir)}`}>
                   RIR {set.rir === 0 ? '0' : set.rir === 1 ? '1-2' : '3+'}
                 </span>
                 <button
                   type="button"
                   onClick={() => deleteSet(set.id)}
-                  className="flex min-h-[44px] min-w-[44px] items-center justify-center text-lg text-white/40 hover:text-red-400"
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-red-400/40 bg-red-500/15 text-red-300 hover:bg-red-500/25 hover:text-red-200"
                   aria-label="Delete set"
                 >
-                  ✕
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6 6 18" />
+                  </svg>
                 </button>
               </div>
             </div>
