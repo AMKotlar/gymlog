@@ -46,7 +46,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   }, [open, exercise?.id])
 
   useEffect(() => {
-    if (!open || !exercise?.id || !userId) return
+    if (!open || !exercise?.name || !userId) return
 
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
     const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
@@ -55,7 +55,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       .from('sets')
       .select('*')
       .eq('user_id', userId)
-      .eq('exercise_id', exercise.id)
+      .eq('exercise_name', exercise.name)
       .gte('logged_at', todayStart)
       .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false })
@@ -74,7 +74,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           setRestSeconds(90)
         }
       })
-  }, [open, userId, exercise?.id])
+  }, [open, userId, exercise?.id, exercise?.name])
 
   useEffect(() => {
     if (!open || secondsLeft <= 0) return
@@ -95,7 +95,6 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setSaving(true)
     const { error } = await supabase.from('sets').insert({
       user_id: userId,
-      exercise_id: exercise.id,
       exercise_name: exercise.name,
       weight: Number(weight),
       reps: Number(reps),
