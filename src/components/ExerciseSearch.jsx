@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import exercises from '../exercises.json'
 import { supabase } from '../supabase'
 
-const categories = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Cardio']
+const categories = ['All', 'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Cardio']
+const customExerciseCategories = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Cardio']
 
 function ExerciseSearch({ open, userId, onClose, onSelect }) {
   const [query, setQuery] = useState('')
   const [customExercises, setCustomExercises] = useState([])
+  const [recentExercises, setRecentExercises] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('All')
   const [showAdd, setShowAdd] = useState(false)
   const [newExercise, setNewExercise] = useState({ name: '', category: 'Chest' })
   const [saving, setSaving] = useState(false)
@@ -19,14 +22,37 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
       .eq('user_id', userId)
       .order('name')
       .then(({ data }) => setCustomExercises(data ?? []))
+
+    supabase
+      .from('sets')
+      .select('exercise_name')
+      .eq('user_id', userId)
+      .order('logged_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        const seen = new Set()
+        const recent = []
+        for (const item of data ?? []) {
+          const name = item.exercise_name
+          if (!name || seen.has(name)) continue
+          seen.add(name)
+          recent.push(name)
+          if (recent.length === 8) break
+        }
+        setRecentExercises(recent)
+      })
   }, [open, userId])
 
-  const merged = useMemo(() => {
-    const list = [...exercises, ...customExercises.map((item) => ({ ...item, id: item.id || item.exercise_id }))]
-    if (!query.trim()) return list.slice(0, 80)
-    const lowered = query.toLowerCase()
-    return list.filter((item) => item.name.toLowerCase().includes(lowered)).slice(0, 80)
-  }, [customExercises, query])
+  const filtered = useMemo(() => {
+    const combined = [...exercises, ...customExercises.map((item) => ({ ...item, id: item.id || item.exercise_id }))]
+    if (query.trim()) {
+      return combined.filter((e) => e.name.toLowerCase().includes(query.toLowerCase())).slice(0, 80)
+    }
+    if (selectedCategory !== 'All') {
+      return combined.filter((e) => e.category === selectedCategory).slice(0, 80)
+    }
+    return combined.slice(0, 80)
+  }, [query, selectedCategory, customExercises])
 
   const saveCustomExercise = async () => {
     if (!newExercise.name.trim()) return
@@ -53,59 +79,177 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 bg-[#0f0f1a]">
-      <div className="mx-auto flex h-full w-full max-w-[430px] flex-col p-4">
-        <div className="mb-3 flex items-center gap-2">
+    <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#0f0f1a' }}>
+      <div
+        style={{
+          margin: '0 auto',
+          display: 'flex',
+          height: '100%',
+          width: '100%',
+          maxWidth: '430px',
+          flexDirection: 'column',
+          padding: '16px',
+        }}
+      >
+        <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input
             autoFocus
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search exercise..."
-            className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 text-white outline-none"
+            style={{
+              height: '48px',
+              width: '100%',
+              borderRadius: '10px',
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: '#17172a',
+              padding: '0 12px',
+              color: 'white',
+              outline: 'none',
+            }}
           />
-          <button type="button" onClick={onClose} className="h-12 min-w-[44px] text-2xl text-white/80">
-            ×
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ height: '48px', minWidth: '44px', fontSize: '24px', color: 'rgba(255,255,255,0.8)' }}
+          >
+            X
           </button>
         </div>
 
-        <div className="flex-1 space-y-2 overflow-y-auto pb-2">
-          {merged.map((exercise) => (
-            <button
-              key={`${exercise.id}-${exercise.name}`}
-              type="button"
-              onClick={() => onSelect(exercise)}
-              className="flex min-h-[44px] w-full items-center justify-between rounded-lg border border-white/10 bg-[#17172a] px-3 py-3 text-left"
-            >
-              <span>{exercise.name}</span>
-              <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-white/70">{exercise.category}</span>
-            </button>
-          ))}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '8px' }}>
+          {!query.trim() && recentExercises.length > 0 ? (
+            <div style={{ marginBottom: '10px' }}>
+              <p style={{ margin: '0 0 8px 0', color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>Recent</p>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {recentExercises.map((name) => (
+                  <button
+                    key={name}
+                    onClick={() => onSelect({ name, category: '' })}
+                    style={{ background: '#17172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '20px', padding: '8px 14px', color: 'white', fontSize: '13px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {!query.trim() ? (
+            <div style={{ marginBottom: '10px' }}>
+              <p style={{ margin: '0 0 8px 0', color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                Browse by muscle
+              </p>
+              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+                {categories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
+                    style={{
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '20px',
+                      padding: '8px 12px',
+                      color: 'white',
+                      fontSize: '13px',
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      background: selectedCategory === category ? '#7c3aed' : '#17172a',
+                    }}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {filtered.map((exercise) => (
+              <button
+                key={`${exercise.id || exercise.name}-${exercise.name}`}
+                type="button"
+                onClick={() => onSelect(exercise)}
+                style={{
+                  display: 'flex',
+                  minHeight: '44px',
+                  width: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#17172a',
+                  padding: '12px',
+                  textAlign: 'left',
+                  color: 'white',
+                }}
+              >
+                <span>{exercise.name}</span>
+                <span
+                  style={{
+                    borderRadius: '999px',
+                    background: 'rgba(255,255,255,0.1)',
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    color: 'rgba(255,255,255,0.7)',
+                  }}
+                >
+                  {exercise.category}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="border-t border-white/10 pt-3">
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '12px' }}>
           <button
             type="button"
             onClick={() => setShowAdd((prev) => !prev)}
-            className="h-11 w-full rounded-lg border border-[#7c3aed] text-[#7c3aed]"
+            style={{
+              height: '44px',
+              width: '100%',
+              borderRadius: '10px',
+              border: '1px solid #7c3aed',
+              color: '#7c3aed',
+              background: 'transparent',
+            }}
           >
             Add custom exercise
           </button>
           {showAdd ? (
-            <div className="mt-3 space-y-2">
+            <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <input
                 value={newExercise.name}
                 onChange={(event) => setNewExercise((prev) => ({ ...prev, name: event.target.value }))}
                 placeholder="Exercise name"
-                className="h-11 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+                style={{
+                  height: '44px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: '#17172a',
+                  padding: '0 12px',
+                  color: 'white',
+                  outline: 'none',
+                }}
               />
               <select
                 value={newExercise.category}
                 onChange={(event) =>
                   setNewExercise((prev) => ({ ...prev, category: event.target.value }))
                 }
-                className="h-11 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+                style={{
+                  height: '44px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  background: '#17172a',
+                  padding: '0 12px',
+                  color: 'white',
+                  outline: 'none',
+                }}
               >
-                {categories.map((category) => (
+                {customExerciseCategories.map((category) => (
                   <option key={category} value={category}>
                     {category}
                   </option>
@@ -115,7 +259,14 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                 type="button"
                 disabled={saving}
                 onClick={saveCustomExercise}
-                className="h-11 w-full rounded-lg bg-[#7c3aed] disabled:opacity-60"
+                style={{
+                  height: '44px',
+                  width: '100%',
+                  borderRadius: '10px',
+                  background: '#7c3aed',
+                  color: 'white',
+                  opacity: saving ? 0.6 : 1,
+                }}
               >
                 {saving ? 'Saving...' : 'Save'}
               </button>
