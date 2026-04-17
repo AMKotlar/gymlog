@@ -43,9 +43,19 @@ function Home({ user }) {
 
   return (
     <div className="px-4 pb-4 pt-4">
-      <header className="mb-5">
-        <p className="text-sm text-white/60">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}</p>
-        <h1 className="mt-1 text-2xl">Today volume: {volume.toFixed(1)} kg</h1>
+      <header className="mb-5" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+          </p>
+          <h1 style={{ fontSize: '22px', marginTop: '4px' }}>Today: {volume.toFixed(1)} kg</h1>
+        </div>
+        <button
+          onClick={() => setSearchOpen(true)}
+          style={{ background: '#7c3aed', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '24px', color: 'white', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          +
+        </button>
       </header>
 
       <section className="space-y-2">
@@ -72,26 +82,16 @@ function Home({ user }) {
                 <button
                   type="button"
                   onClick={() => deleteSet(set.id)}
-                  style={{ minHeight: '44px', minWidth: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.4)', background: 'rgba(239,68,68,0.15)', color: '#fca5a5', cursor: 'pointer' }}
+                  style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)', background: 'rgba(239,68,68,0.2)', color: '#fecaca', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                   aria-label="Delete set"
                 >
-                  <span style={{ fontSize: '20px', lineHeight: 1, fontWeight: 700, fontFamily: 'system-ui, sans-serif' }} aria-hidden="true">
-                    X
-                  </span>
+                  Delete
                 </button>
               </div>
             </div>
           ))
         )}
       </section>
-
-      <button
-        type="button"
-        onClick={() => setSearchOpen(true)}
-        className="fixed bottom-20 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-[#7c3aed] text-3xl"
-      >
-        +
-      </button>
 
       <ExerciseSearch
         open={searchOpen}
