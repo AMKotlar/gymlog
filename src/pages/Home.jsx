@@ -14,6 +14,8 @@ function Home({ user }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [exercise, setExercise] = useState(null)
   const [showCongrats, setShowCongrats] = useState(false)
+  const [workoutComment, setWorkoutComment] = useState('')
+  const [showCommentModal, setShowCommentModal] = useState(false)
 
   const fetchTodaySets = async () => {
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
@@ -48,7 +50,9 @@ function Home({ user }) {
       user_id: user.id,
       date: today,
       completed_at: new Date().toISOString(),
+      comment: workoutComment || null,
     })
+    setShowCommentModal(false)
     setShowCongrats(true)
   }
 
@@ -106,7 +110,7 @@ function Home({ user }) {
 
       {sets.length > 0 ? (
         <button
-          onClick={handleDoneForToday}
+          onClick={() => setShowCommentModal(true)}
           style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', fontSize: '15px', cursor: 'pointer' }}
         >
           Done for today 🏁
@@ -171,6 +175,39 @@ function Home({ user }) {
             >
               Close
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {showCommentModal ? (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+          <div style={{ background: '#17172a', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '380px' }}>
+            <p style={{ color: 'white', fontSize: '18px', fontWeight: '500', marginBottom: '6px' }}>How was your workout?</p>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '16px' }}>Add a note (optional)</p>
+            <textarea
+              value={workoutComment}
+              onChange={(e) => setWorkoutComment(e.target.value)}
+              placeholder="e.g. Felt strong today, shoulder was a bit tight..."
+              rows={4}
+              style={{ width: '100%', background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px', color: 'white', fontSize: '14px', resize: 'none', fontFamily: 'inherit', outline: 'none' }}
+            />
+            <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+              <button
+                onClick={() => {
+                  setWorkoutComment('')
+                  handleDoneForToday()
+                }}
+                style={{ flex: 1, padding: '12px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', color: 'rgba(255,255,255,0.5)', fontSize: '14px', cursor: 'pointer' }}
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleDoneForToday}
+                style={{ flex: 2, padding: '12px', background: '#7c3aed', border: 'none', borderRadius: '10px', color: 'white', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
+              >
+                Save & finish 🏁
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
