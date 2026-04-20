@@ -128,8 +128,19 @@ function Profile({ user }) {
     <div style={{ padding: '16px' }}>
       <h1 style={{ marginBottom: '24px', fontSize: '24px' }}>Profile</h1>
       <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
-        <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Email</p>
-        <p style={{ marginTop: '4px' }}>{user.email}</p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+          <div>
+            <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Email</p>
+            <p style={{ marginTop: '4px' }}>{user.email}</p>
+          </div>
+          <button
+            type="button"
+            onClick={signOut}
+            style={{ minHeight: '36px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)', background: 'rgba(239,68,68,0.2)', color: '#fecaca', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
@@ -234,13 +245,6 @@ function Profile({ user }) {
         </p>
       ) : null}
 
-      <button
-        type="button"
-        onClick={signOut}
-        style={{ marginTop: '14px', height: '48px', width: '100%', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'white' }}
-      >
-        Sign out
-      </button>
     </div>
   )
 }
