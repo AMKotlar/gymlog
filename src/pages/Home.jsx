@@ -16,6 +16,7 @@ function Home({ user }) {
   const [showCongrats, setShowCongrats] = useState(false)
   const [workoutComment, setWorkoutComment] = useState('')
   const [showCommentModal, setShowCommentModal] = useState(false)
+  const [todayCompleted, setTodayCompleted] = useState(false)
 
   const fetchTodaySets = async () => {
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
@@ -32,6 +33,15 @@ function Home({ user }) {
 
   useEffect(() => {
     fetchTodaySets()
+    supabase
+      .from('sessions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', new Date().toISOString().split('T')[0])
+      .maybeSingle()
+      .then(({ data: completedSession }) => {
+        if (completedSession) setTodayCompleted(true)
+      })
   }, [])
 
   const deleteSet = async (setId) => {
@@ -53,6 +63,7 @@ function Home({ user }) {
       comment: workoutComment || null,
     })
     setShowCommentModal(false)
+    setTodayCompleted(true)
     setShowCongrats(true)
   }
 
@@ -65,57 +76,75 @@ function Home({ user }) {
           </p>
           <h1 style={{ fontSize: '22px', marginTop: '4px' }}>Today: {volume.toFixed(1)} kg</h1>
         </div>
-        <button
-          onClick={() => setSearchOpen(true)}
-          style={{ background: '#7c3aed', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '24px', color: 'white', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        >
-          +
-        </button>
+        {!todayCompleted ? (
+          <button
+            onClick={() => setSearchOpen(true)}
+            style={{ background: '#7c3aed', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '24px', color: 'white', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            +
+          </button>
+        ) : null}
       </header>
 
-      <section className="space-y-2">
-        {sets.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-[#17172a] p-4 text-white/60">
-            No sets logged yet. Tap + to start.
-          </div>
-        ) : (
-          sets.map((set) => (
-            <div
-              key={set.id}
-              className="flex items-center justify-between rounded-xl border border-white/10 bg-[#17172a] px-3 py-3"
-            >
-              <div>
-                <p>{set.exercise_name}</p>
-                <p className="text-sm text-white/60">
-                  {set.weight} {'\u00D7'} {set.reps} {'\u00B7'} Rest {set.rest_seconds}s
-                </p>
+      {todayCompleted ? (
+        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
+          <p style={{ color: 'white', fontSize: '20px', fontWeight: '500', marginBottom: '8px' }}>Workout done!</p>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '24px' }}>Great work today. See you next session.</p>
+          <button
+            onClick={() => setTodayCompleted(false)}
+            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 24px', color: 'rgba(255,255,255,0.5)', fontSize: '14px', cursor: 'pointer' }}
+          >
+            View today's sets
+          </button>
+        </div>
+      ) : (
+        <>
+          <section className="space-y-2">
+            {sets.length === 0 ? (
+              <div className="rounded-xl border border-white/10 bg-[#17172a] p-4 text-white/60">
+                No sets logged yet. Tap + to start.
               </div>
-              <div className="ml-2 flex shrink-0 items-center gap-2">
-                <span className={`rounded-full px-2 py-1 text-xs ${rirBadgeStyle(set.rir)}`}>
-                  RIR {set.rir === 0 ? '0' : set.rir === 1 ? '1-2' : '3+'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => deleteSet(set.id)}
-                  style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)', background: 'rgba(239,68,68,0.2)', color: '#fecaca', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
-                  aria-label="Delete set"
+            ) : (
+              sets.map((set) => (
+                <div
+                  key={set.id}
+                  className="flex items-center justify-between rounded-xl border border-white/10 bg-[#17172a] px-3 py-3"
                 >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </section>
+                  <div>
+                    <p>{set.exercise_name}</p>
+                    <p className="text-sm text-white/60">
+                      {set.weight} {'\u00D7'} {set.reps} {'\u00B7'} Rest {set.rest_seconds}s
+                    </p>
+                  </div>
+                  <div className="ml-2 flex shrink-0 items-center gap-2">
+                    <span className={`rounded-full px-2 py-1 text-xs ${rirBadgeStyle(set.rir)}`}>
+                      RIR {set.rir === 0 ? '0' : set.rir === 1 ? '1-2' : '3+'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => deleteSet(set.id)}
+                      style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)', background: 'rgba(239,68,68,0.2)', color: '#fecaca', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                      aria-label="Delete set"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </section>
 
-      {sets.length > 0 ? (
-        <button
-          onClick={() => setShowCommentModal(true)}
-          style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', fontSize: '15px', cursor: 'pointer' }}
-        >
-          Done for today 🏁
-        </button>
-      ) : null}
+          {sets.length > 0 ? (
+            <button
+              onClick={() => setShowCommentModal(true)}
+              style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', fontSize: '15px', cursor: 'pointer' }}
+            >
+              Done for today 🏁
+            </button>
+          ) : null}
+        </>
+      )}
 
       <ExerciseSearch
         open={searchOpen}
