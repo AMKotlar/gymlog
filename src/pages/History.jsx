@@ -74,7 +74,7 @@ function History({ user }) {
   const grouped = useMemo(() => {
     const map = new Map()
     for (const set of sets) {
-      const dateKey = new Date(set.logged_at).toISOString().slice(0, 10)
+      const dateKey = String(set.logged_at).split('T')[0]
       if (!map.has(dateKey)) map.set(dateKey, [])
       map.get(dateKey).push(set)
     }
@@ -98,7 +98,12 @@ function History({ user }) {
               >
                 <div>
                   <p>{new Date(dateKey).toLocaleDateString()}</p>
-                  <p className="text-sm text-white/60">{volume.toFixed(1)} kg · {dateSets.length} sets</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+                      {volume.toFixed(1)} kg · {dateSets.length} sets
+                    </span>
+                    {session?.comment ? <span style={{ fontSize: '14px' }}>💬</span> : null}
+                  </div>
                 </div>
                 <span className="text-white/50">{expanded ? '−' : '+'}</span>
               </button>

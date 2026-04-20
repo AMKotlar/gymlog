@@ -33,6 +33,9 @@ function Home({ user }) {
 
   useEffect(() => {
     fetchTodaySets()
+  }, [user.id])
+
+  useEffect(() => {
     supabase
       .from('sessions')
       .select('*')
@@ -40,9 +43,9 @@ function Home({ user }) {
       .eq('date', new Date().toISOString().split('T')[0])
       .maybeSingle()
       .then(({ data: completedSession }) => {
-        if (completedSession) setTodayCompleted(true)
+        setTodayCompleted(Boolean(completedSession))
       })
-  }, [])
+  }, [user.id])
 
   const deleteSet = async (setId) => {
     setSets((current) => current.filter((set) => set.id !== setId))
@@ -90,12 +93,21 @@ function Home({ user }) {
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
           <p style={{ color: 'white', fontSize: '20px', fontWeight: '500', marginBottom: '8px' }}>Workout done!</p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '24px' }}>Great work today. See you next session.</p>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '8px' }}>Great work today.</p>
+          <div style={{ background: '#17172a', borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>
+            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Today's exercises</p>
+            {sets.map((set) => (
+              <div key={set.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <span style={{ color: 'white', fontSize: '14px' }}>{set.exercise_name}</span>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>{set.weight} kg × {set.reps}</span>
+              </div>
+            ))}
+          </div>
           <button
             onClick={() => setTodayCompleted(false)}
             style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '10px 24px', color: 'rgba(255,255,255,0.5)', fontSize: '14px', cursor: 'pointer' }}
           >
-            View today's sets
+            Edit today's sets
           </button>
         </div>
       ) : (
