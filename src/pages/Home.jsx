@@ -70,12 +70,20 @@ function Home({ user }) {
   const handleDoneForToday = async () => {
     setSaving(true)
     try {
-      const { error } = await supabase.from('sessions').insert({
+      let { error } = await supabase.from('sessions').insert({
         user_id: user.id,
         date: new Date().toISOString().split('T')[0],
         completed_at: new Date().toISOString(),
         comment: workoutComment || null,
       })
+      if (error?.message?.toLowerCase().includes('completed_at')) {
+        const retry = await supabase.from('sessions').insert({
+          user_id: user.id,
+          date: new Date().toISOString().split('T')[0],
+          comment: workoutComment || null,
+        })
+        error = retry.error
+      }
       if (error) {
         console.error('Session insert error:', error)
         alert('Could not save session: ' + error.message)
