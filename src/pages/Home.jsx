@@ -3,6 +3,14 @@ import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
 import { supabase } from '../supabase'
 
+function getLocalDateKey() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function rirBadgeStyle(rir) {
   if (rir === 0) return 'bg-red-500/20 text-red-300'
   if (rir === 1) return 'bg-amber-500/20 text-amber-300'
@@ -38,12 +46,13 @@ function Home({ user }) {
   useEffect(() => {
     supabase
       .from('sessions')
-      .select('*')
+      .select('id')
       .eq('user_id', user.id)
-      .eq('date', new Date().toISOString().split('T')[0])
-      .maybeSingle()
-      .then(({ data: completedSession }) => {
-        setTodayCompleted(Boolean(completedSession))
+      .eq('date', getLocalDateKey())
+      .order('completed_at', { ascending: false })
+      .limit(1)
+      .then(({ data }) => {
+        setTodayCompleted((data ?? []).length > 0)
       })
   }, [user.id])
 
@@ -58,7 +67,7 @@ function Home({ user }) {
   )
 
   const handleDoneForToday = async () => {
-    const today = new Date().toISOString().split('T')[0]
+    const today = getLocalDateKey()
     await supabase.from('sessions').insert({
       user_id: user.id,
       date: today,
