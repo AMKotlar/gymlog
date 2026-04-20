@@ -17,8 +17,11 @@ function Profile({ user }) {
   const [weightKg, setWeightKg] = useState('')
   const [weightDate, setWeightDate] = useState(todayKey())
   const [weightHistory, setWeightHistory] = useState([])
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [savingWeight, setSavingWeight] = useState(false)
+  const [profileSaved, setProfileSaved] = useState(false)
+  const [weightSaved, setWeightSaved] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   const fetchProfile = async () => {
     if (!user?.id) return
@@ -53,29 +56,58 @@ function Profile({ user }) {
 
   const saveProfile = async () => {
     if (!user?.id) return
-    setSaving(true)
+    setErrorMessage('')
+    setSavingProfile(true)
     const birthDate = birthYear ? `${birthYear}-01-01` : null
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id,
-      date_of_birth: birthDate,
-      height_cm: heightCm === '' ? null : Number(heightCm),
-      weight_kg: weightKg === '' ? null : Number(weightKg),
-      updated_at: new Date().toISOString(),
-    })
-
-    if (!error && weightKg !== '') {
-      await supabase.from('weight_history').insert({
-        user_id: user.id,
-        weight_kg: Number(weightKg),
-        recorded_on: weightDate || todayKey(),
-      })
+    const { error } = await supabase
+      .from('profiles')
+      .upsert(
+        {
+          id: user.id,
+          date_of_birth: birthDate,
+          height_cm: heightCm === '' ? null : Number(heightCm),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'id' },
+      )
+    setSavingProfile(false)
+    if (error) {
+      setErrorMessage(error.message)
+      return
     }
+    setProfileSaved(true)
+    setTimeout(() => setProfileSaved(false), 2000)
+  }
 
-    setSaving(false)
-    if (error) return
+  const saveWeightEntry = async () => {
+    if (!user?.id) return
+    if (weightKg === '') {
+      setErrorMessage('Enter weight before saving history.')
+      return
+    }
+    setErrorMessage('')
+    setSavingWeight(true)
+    const { error } = await supabase.from('weight_history').insert({
+      user_id: user.id,
+      weight_kg: Number(weightKg),
+      recorded_on: weightDate || todayKey(),
+    })
+    setSavingWeight(false)
+
+    if (error) {
+      setErrorMessage(error.message)
+      return
+    }
+    await supabase
+      .from('profiles')
+      .update({
+        weight_kg: Number(weightKg),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
     await fetchWeightHistory()
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setWeightSaved(true)
+    setTimeout(() => setWeightSaved(false), 2000)
   }
 
   const signOut = async () => {
@@ -110,6 +142,21 @@ function Profile({ user }) {
             placeholder="Height (cm)"
             style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
           />
+          <button
+            type="button"
+            onClick={saveProfile}
+            disabled={savingProfile}
+            style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1 }}
+          >
+            {savingProfile ? 'Saving...' : 'Save personal data'}
+          </button>
+          {profileSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Saved ✓</p> : null}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
+        <p style={{ margin: 0, marginBottom: '10px', fontSize: '15px' }}>Weight log</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
           <input
             type="number"
             value={weightKg}
@@ -125,17 +172,15 @@ function Profile({ user }) {
           />
           <button
             type="button"
-            onClick={saveProfile}
-            disabled={saving}
-            style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}
+            onClick={saveWeightEntry}
+            disabled={savingWeight}
+            style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingWeight ? 0.6 : 1 }}
           >
-            {saving ? 'Saving...' : 'Save'}
+            {savingWeight ? 'Saving...' : 'Save weight entry'}
           </button>
-          {saved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Saved ✓</p> : null}
+          {weightSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Weight saved ✓</p> : null}
         </div>
-      </div>
 
-      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
         <p style={{ margin: 0, marginBottom: '10px', fontSize: '15px' }}>Weight history</p>
         {weightHistory.length === 0 ? (
           <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>No entries yet.</p>
@@ -153,6 +198,12 @@ function Profile({ user }) {
           </div>
         )}
       </div>
+
+      {errorMessage ? (
+        <p style={{ marginTop: '10px', color: '#fca5a5', fontSize: '13px' }}>
+          {errorMessage}
+        </p>
+      ) : null}
 
       <button
         type="button"
