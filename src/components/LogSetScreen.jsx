@@ -3,9 +3,33 @@ import { supabase } from '../supabase'
 import ScrollWheel from './ScrollWheel'
 
 const rirOptions = [
-  { label: '0', description: 'Absolute failure', value: 0, active: 'bg-red-500/20 border-red-500 text-red-300' },
-  { label: '1-2', description: 'Close to failure', value: 1, active: 'bg-amber-500/20 border-amber-500 text-amber-300' },
-  { label: '3+', description: 'More in tank', value: 2, active: 'bg-green-500/20 border-green-500 text-green-300' },
+  {
+    top: '0',
+    middle: 'To failure',
+    bottom: 'Could not do one more rep',
+    value: 0,
+    activeBg: 'rgba(239,68,68,0.2)',
+    activeBorder: '1px solid #ef4444',
+    activeText: '#fca5a5',
+  },
+  {
+    top: '1-2',
+    middle: 'Almost there',
+    bottom: '1 or 2 reps left',
+    value: 1,
+    activeBg: 'rgba(245,158,11,0.2)',
+    activeBorder: '1px solid #f59e0b',
+    activeText: '#fcd34d',
+  },
+  {
+    top: '3+',
+    middle: 'Had more left',
+    bottom: '3 or more reps left',
+    value: 2,
+    activeBg: 'rgba(34,197,94,0.2)',
+    activeBorder: '1px solid #22c55e',
+    activeText: '#86efac',
+  },
 ]
 
 const rests = [
@@ -26,8 +50,6 @@ function formatLastSet(lastSet) {
 }
 
 function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
-  const [secondsLeft, setSecondsLeft] = useState(30)
-  const [expiredOverride, setExpiredOverride] = useState(false)
   const [weight, setWeight] = useState(20)
   const [reps, setReps] = useState(8)
   const [rir, setRir] = useState(null)
@@ -36,12 +58,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [lastSet, setLastSet] = useState(null)
   const [saving, setSaving] = useState(false)
 
-  const canLog = rir !== null && (secondsLeft > 0 || expiredOverride)
+  const canLog = rir !== null
 
   useEffect(() => {
     if (!open) return
-    setSecondsLeft(30)
-    setExpiredOverride(false)
     setRir(null)
   }, [open, exercise?.id])
 
@@ -75,18 +95,6 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         }
       })
   }, [open, userId, exercise?.id, exercise?.name])
-
-  useEffect(() => {
-    if (!open || secondsLeft <= 0) return
-    const timer = setTimeout(() => setSecondsLeft((prev) => prev - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [open, secondsLeft])
-
-  const radius = 52
-  const circumference = 2 * Math.PI * radius
-  const progress = secondsLeft / 30
-  const strokeDashoffset = circumference * (1 - progress)
-  const timerColor = secondsLeft > 20 ? '#7c3aed' : secondsLeft > 10 ? '#f59e0b' : '#ef4444'
 
   const volume = useMemo(() => Number((weight * reps).toFixed(2)), [weight, reps])
 
@@ -125,24 +133,6 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           </button>
         </div>
 
-        <div className="mb-4 flex flex-col items-center">
-          <svg width="132" height="132" viewBox="0 0 132 132" className="-rotate-90">
-            <circle cx="66" cy="66" r={radius} stroke="#2a2a3e" strokeWidth="10" fill="transparent" />
-            <circle
-              cx="66"
-              cy="66"
-              r={radius}
-              stroke={timerColor}
-              strokeWidth="10"
-              fill="transparent"
-              strokeDasharray={circumference}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="-mt-[84px] mb-[52px] text-3xl font-semibold">{secondsLeft}</div>
-        </div>
-
         <div className="mb-2 flex items-center gap-3">
           <div className="flex-1">
             <ScrollWheel
@@ -160,18 +150,32 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         </div>
         <p className="mb-4 text-center text-sm text-white/60">Volume this set: {formatWeight(volume)} kg</p>
 
+        <p style={{ color: 'white', fontSize: '15px', fontWeight: '500', marginBottom: '10px' }}>
+          How did you feel after this set?
+        </p>
+        <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', marginBottom: '12px', marginTop: '-6px' }}>
+          How many more reps could you have done?
+        </p>
+
         <div className="mb-4 grid grid-cols-3 gap-2">
           {rirOptions.map((option) => (
             <button
               type="button"
-              key={option.label}
+              key={option.top}
               onClick={() => setRir(option.value)}
-              className={`min-h-[44px] rounded-xl border px-2 py-3 text-left ${
-                rir === option.value ? option.active : 'border-white/15 bg-[#17172a]'
-              }`}
+              style={{
+                minHeight: '90px',
+                borderRadius: '12px',
+                border: rir === option.value ? option.activeBorder : '1px solid rgba(255,255,255,0.15)',
+                background: rir === option.value ? option.activeBg : '#17172a',
+                textAlign: 'left',
+                padding: '10px',
+                color: rir === option.value ? option.activeText : 'white',
+              }}
             >
-              <div className="font-semibold">{option.label}</div>
-              <div className="text-xs text-white/70">{option.description}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.1 }}>{option.top}</div>
+              <div style={{ marginTop: '8px', fontSize: '13px', fontWeight: 700 }}>{option.middle}</div>
+              <div style={{ marginTop: '6px', fontSize: '11px', color: 'rgba(255,255,255,0.7)' }}>{option.bottom}</div>
             </button>
           ))}
         </div>
@@ -199,17 +203,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           disabled={!canLog || saving}
           className="h-12 w-full rounded-xl bg-[#7c3aed] text-base disabled:opacity-40"
         >
-          {secondsLeft === 0 && !expiredOverride ? 'Time expired' : saving ? 'Logging...' : 'Log set'}
+          {saving ? 'Logging...' : 'Log set'}
         </button>
-        {secondsLeft === 0 && !expiredOverride ? (
-          <button
-            type="button"
-            onClick={() => setExpiredOverride(true)}
-            className="mt-2 h-11 w-full text-sm text-white/60 underline"
-          >
-            Log anyway
-          </button>
-        ) : null}
       </div>
     </div>
   )

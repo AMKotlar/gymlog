@@ -13,6 +13,7 @@ function Home({ user }) {
   const [sets, setSets] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [exercise, setExercise] = useState(null)
+  const [showCongrats, setShowCongrats] = useState(false)
 
   const fetchTodaySets = async () => {
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
@@ -40,6 +41,16 @@ function Home({ user }) {
     () => sets.reduce((sum, item) => sum + Number(item.weight) * Number(item.reps), 0),
     [sets],
   )
+
+  const handleDoneForToday = async () => {
+    const today = new Date().toISOString().split('T')[0]
+    await supabase.from('sessions').insert({
+      user_id: user.id,
+      date: today,
+      completed_at: new Date().toISOString(),
+    })
+    setShowCongrats(true)
+  }
 
   return (
     <div className="px-4 pb-4 pt-4">
@@ -93,6 +104,15 @@ function Home({ user }) {
         )}
       </section>
 
+      {sets.length > 0 ? (
+        <button
+          onClick={handleDoneForToday}
+          style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', fontSize: '15px', cursor: 'pointer' }}
+        >
+          Done for today 🏁
+        </button>
+      ) : null}
+
       <ExerciseSearch
         open={searchOpen}
         userId={user.id}
@@ -113,6 +133,47 @@ function Home({ user }) {
           fetchTodaySets()
         }}
       />
+
+      {showCongrats ? (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#0f0f1a',
+            zIndex: 70,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div style={{ width: '100%', maxWidth: '430px', textAlign: 'center' }}>
+            <div style={{ fontSize: '54px' }}>🏁</div>
+            <h2 style={{ margin: '14px 0 10px 0', color: 'white', fontSize: '30px' }}>Great workout!</h2>
+            <p style={{ margin: '0 0 6px 0', color: 'rgba(255,255,255,0.75)', fontSize: '16px' }}>
+              Total volume: {volume.toFixed(1)} kg
+            </p>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '16px' }}>Sets logged: {sets.length}</p>
+            <button
+              type="button"
+              onClick={() => setShowCongrats(false)}
+              style={{
+                marginTop: '18px',
+                width: '100%',
+                height: '48px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#7c3aed',
+                color: 'white',
+                fontSize: '16px',
+                cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
