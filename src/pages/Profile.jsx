@@ -23,6 +23,7 @@ function Profile({ user }) {
   const [weightSaved, setWeightSaved] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [hasPersonalData, setHasPersonalData] = useState(false)
+  const [isEditingPersonal, setIsEditingPersonal] = useState(true)
 
   const fetchProfile = async () => {
     if (!user?.id) return
@@ -37,7 +38,9 @@ function Profile({ user }) {
     setBirthYear(year)
     setHeightCm(data.height_cm ?? '')
     setWeightKg(data.weight_kg ?? '')
-    setHasPersonalData(Boolean(year || data.height_cm))
+    const hasData = Boolean(year || data.height_cm)
+    setHasPersonalData(hasData)
+    setIsEditingPersonal(!hasData)
   }
 
   const fetchWeightHistory = async () => {
@@ -78,6 +81,7 @@ function Profile({ user }) {
       return
     }
     setHasPersonalData(Boolean(birthYear || heightCm))
+    setIsEditingPersonal(false)
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2000)
   }
@@ -140,33 +144,43 @@ function Profile({ user }) {
             </p>
           </div>
         ) : null}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input
-            type="number"
-            min="1900"
-            max="2100"
-            value={birthYear}
-            onChange={(event) => setBirthYear(event.target.value)}
-            placeholder="Year of birth"
-            style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
-          />
-          <input
-            type="number"
-            value={heightCm}
-            onChange={(event) => setHeightCm(event.target.value)}
-            placeholder="Height (cm)"
-            style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
-          />
+        {isEditingPersonal ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <input
+              type="number"
+              min="1900"
+              max="2100"
+              value={birthYear}
+              onChange={(event) => setBirthYear(event.target.value)}
+              placeholder="Year of birth"
+              style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+            />
+            <input
+              type="number"
+              value={heightCm}
+              onChange={(event) => setHeightCm(event.target.value)}
+              placeholder="Height (cm)"
+              style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+            />
+            <button
+              type="button"
+              onClick={saveProfile}
+              disabled={savingProfile}
+              style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1 }}
+            >
+              {savingProfile ? 'Saving...' : hasPersonalData ? 'Save changes' : 'Save personal data'}
+            </button>
+            {profileSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Saved ✓</p> : null}
+          </div>
+        ) : (
           <button
             type="button"
-            onClick={saveProfile}
-            disabled={savingProfile}
-            style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1 }}
+            onClick={() => setIsEditingPersonal(true)}
+            style={{ height: '40px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', width: '100%' }}
           >
-            {savingProfile ? 'Saving...' : hasPersonalData ? 'Edit personal data' : 'Save personal data'}
+            Edit personal data
           </button>
-          {profileSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Saved ✓</p> : null}
-        </div>
+        )}
       </div>
 
       <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
