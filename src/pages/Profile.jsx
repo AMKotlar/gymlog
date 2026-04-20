@@ -22,6 +22,7 @@ function Profile({ user }) {
   const [profileSaved, setProfileSaved] = useState(false)
   const [weightSaved, setWeightSaved] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [hasPersonalData, setHasPersonalData] = useState(false)
 
   const fetchProfile = async () => {
     if (!user?.id) return
@@ -36,6 +37,7 @@ function Profile({ user }) {
     setBirthYear(year)
     setHeightCm(data.height_cm ?? '')
     setWeightKg(data.weight_kg ?? '')
+    setHasPersonalData(Boolean(year || data.height_cm))
   }
 
   const fetchWeightHistory = async () => {
@@ -75,9 +77,12 @@ function Profile({ user }) {
       setErrorMessage(error.message)
       return
     }
+    setHasPersonalData(Boolean(birthYear || heightCm))
     setProfileSaved(true)
     setTimeout(() => setProfileSaved(false), 2000)
   }
+
+  const age = birthYear ? new Date().getFullYear() - Number(birthYear) : null
 
   const saveWeightEntry = async () => {
     if (!user?.id) return
@@ -125,6 +130,16 @@ function Profile({ user }) {
 
       <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
         <p style={{ margin: 0, marginBottom: '12px', fontSize: '15px' }}>Personal stats</p>
+        {hasPersonalData ? (
+          <div style={{ marginBottom: '10px', borderRadius: '10px', background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.08)', padding: '10px 12px' }}>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
+              {birthYear ? `Birth year ${birthYear}${age !== null ? ` (${age} years)` : ''}` : 'Birth year not set'}
+            </p>
+            <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
+              {heightCm ? `Height ${heightCm} cm` : 'Height not set'}
+            </p>
+          </div>
+        ) : null}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input
             type="number"
@@ -148,7 +163,7 @@ function Profile({ user }) {
             disabled={savingProfile}
             style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1 }}
           >
-            {savingProfile ? 'Saving...' : 'Save personal data'}
+            {savingProfile ? 'Saving...' : hasPersonalData ? 'Edit personal data' : 'Save personal data'}
           </button>
           {profileSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Saved ✓</p> : null}
         </div>
