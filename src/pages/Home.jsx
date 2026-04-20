@@ -68,12 +68,27 @@ function Home({ user }) {
 
   const handleDoneForToday = async () => {
     const today = getLocalDateKey()
-    await supabase.from('sessions').insert({
+    let { error } = await supabase.from('sessions').insert({
       user_id: user.id,
       date: today,
       completed_at: new Date().toISOString(),
       comment: workoutComment || null,
     })
+
+    // Backward-compatible fallback in case the comment column was not added yet.
+    if (error?.message?.toLowerCase().includes('comment')) {
+      const retry = await supabase.from('sessions').insert({
+        user_id: user.id,
+        date: today,
+        completed_at: new Date().toISOString(),
+      })
+      error = retry.error
+    }
+
+    if (error) {
+      return
+    }
+
     setShowCommentModal(false)
     setTodayCompleted(true)
     setShowCongrats(true)
