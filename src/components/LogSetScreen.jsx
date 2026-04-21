@@ -97,6 +97,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     if (!open) return
     setRir(null)
     setRestActive(false)
+    setRestRemaining(0)
     setRestCompleteMessage(false)
     setNewPRs([])
     setPendingRestStart(false)
@@ -105,7 +106,12 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setContractTarget(null)
     setContractAccepted(false)
     setContractFlash('default')
-  }, [open, exercise?.id])
+  }, [exercise?.id])
+
+  useEffect(() => {
+    if (open) return
+    setRir(null)
+  }, [open])
 
   useEffect(() => {
     if (!open || !exercise?.name || !userId) return
