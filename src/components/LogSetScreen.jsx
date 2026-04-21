@@ -4,6 +4,7 @@ import { formatDateKey } from '../utils/dateUtils'
 import PRCelebration from './PRCelebration'
 import RestTimer from './RestTimer'
 import ScrollWheel from './ScrollWheel'
+import SetContract from './SetContract'
 
 const rirOptions = [
   {
@@ -82,6 +83,11 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [setCountToday, setSetCountToday] = useState(0)
   const [lastSet, setLastSet] = useState(null)
   const [lastSessionSets, setLastSessionSets] = useState([])
+  const [showContract, setShowContract] = useState(false)
+  const [selectedContractPath, setSelectedContractPath] = useState('A')
+  const [contractTarget, setContractTarget] = useState(null)
+  const [contractAccepted, setContractAccepted] = useState(false)
+  const [contractFlash, setContractFlash] = useState('default')
   const [saving, setSaving] = useState(false)
 
   const canLog = rir !== null
@@ -93,6 +99,11 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setRestCompleteMessage(false)
     setNewPRs([])
     setPendingRestStart(false)
+    setShowContract(false)
+    setSelectedContractPath('A')
+    setContractTarget(null)
+    setContractAccepted(false)
+    setContractFlash('default')
   }, [open, exercise?.id])
 
   useEffect(() => {
@@ -134,11 +145,14 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         setWeight(previous[0].weight ?? 20)
         setReps(previous[0].reps ?? 8)
         setRestSeconds(previous[0].rest_seconds ?? 90)
+        setShowContract(true)
+        setSelectedContractPath('A')
       } else {
         setLastSet(null)
         setWeight(20)
         setReps(8)
         setRestSeconds(90)
+        setShowContract(false)
       }
     })
   }, [open, userId, exercise?.id, exercise?.name])
@@ -193,6 +207,29 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     }
   }
 
+  const baselineSet = lastSessionSets[0]
+  const contractPathA = baselineSet
+    ? { weight: baselineSet.weight, reps: baselineSet.reps + 1 }
+    : { weight: 20, reps: 8 }
+  const contractPathB = baselineSet
+    ? { weight: Number((Number(baselineSet.weight) + 2.5).toFixed(1)), reps: baselineSet.reps }
+    : { weight: 22.5, reps: 8 }
+
+  const acceptContract = () => {
+    const target = selectedContractPath === 'A' ? contractPathA : contractPathB
+    setContractTarget(target)
+    setContractAccepted(true)
+    setWeight(target.weight)
+    setReps(target.reps)
+    setShowContract(false)
+  }
+
+  const skipContract = () => {
+    setContractTarget(null)
+    setContractAccepted(false)
+    setShowContract(false)
+  }
+
   const logSet = async () => {
     if (!canLog || !exercise || !userId) return
     setSaving(true)
@@ -208,6 +245,18 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setSaving(false)
     if (error) return
     onLogged()
+
+    if (contractAccepted && contractTarget) {
+      const contractBeaten =
+        Number(weight) > Number(contractTarget.weight) ||
+        Number(reps) > Number(contractTarget.reps) ||
+        (Number(weight) === Number(contractTarget.weight) &&
+          Number(reps) >= Number(contractTarget.reps))
+
+      setContractFlash(contractBeaten ? 'success' : 'danger')
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setContractFlash('default')
+    }
 
     const setVolume = Number((Number(weight) * Number(reps)).toFixed(2))
     const { data: currentPRs } = await supabase
@@ -324,6 +373,33 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           </div>
         ) : null}
 
+        {contractAccepted && contractTarget ? (
+          <div
+            style={{
+              marginBottom: '10px',
+              display: 'inline-flex',
+              borderRadius: 'var(--radius-pill)',
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontFamily: "'IBM Plex Mono', monospace",
+              color:
+                contractFlash === 'success'
+                  ? '#00ff88'
+                  : contractFlash === 'danger'
+                    ? 'var(--danger)'
+                    : 'var(--accent)',
+              background:
+                contractFlash === 'success'
+                  ? 'rgba(0,255,136,0.15)'
+                  : contractFlash === 'danger'
+                    ? 'var(--danger-dim)'
+                    : 'var(--accent-dim)',
+            }}
+          >
+            CONTRACT: {contractTarget.weight} kg × {contractTarget.reps}
+          </div>
+        ) : null}
+
         <div className="mb-2 flex items-center gap-3">
           <div className="flex-1">
             <ScrollWheel
@@ -424,6 +500,18 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         reps={reps}
         prTypes={newPRs}
         onDismiss={dismissPRAndStartRest}
+      />
+      <SetContract
+        open={showContract}
+        exerciseName={exercise.name}
+        lastSet={baselineSet}
+        lastDateLabel={formatDateKey(localDateKeyFromISO(baselineSet?.logged_at))}
+        pathA={contractPathA}
+        pathB={contractPathB}
+        selectedPath={selectedContractPath}
+        onSelectPath={setSelectedContractPath}
+        onAccept={acceptContract}
+        onSkip={skipContract}
       />
     </div>
   )
