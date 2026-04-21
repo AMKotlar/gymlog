@@ -4,6 +4,7 @@ import { supabase } from './supabase'
 import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
 import History from './pages/History'
+import PRs from './pages/PRs'
 import Profile from './pages/Profile'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
@@ -14,6 +15,7 @@ function AppShell({ user }) {
       <Routes>
         <Route path="/" element={<Home user={user} />} />
         <Route path="/history" element={<History user={user} />} />
+        <Route path="/prs" element={<PRs user={user} />} />
         <Route path="/profile" element={<Profile user={user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
