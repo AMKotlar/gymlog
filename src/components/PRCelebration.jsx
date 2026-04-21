@@ -19,7 +19,7 @@ function PRCelebration({ open, exerciseName, weight, reps, prTypes, onDismiss })
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 90,
+        zIndex: 95,
         background: 'var(--bg-base)',
         display: 'flex',
         alignItems: 'center',

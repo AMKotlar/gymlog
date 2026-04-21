@@ -304,10 +304,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setRestTotal(restSeconds)
     setRestRemaining(restSeconds)
     setRestCompleteMessage(false)
-    setPendingRestStart(true)
-    setNewPRs(achieved)
-
-    if (achieved.length === 0) {
+    if (achieved.length > 0) {
+      setPendingRestStart(true)
+      setNewPRs(achieved)
+    } else {
       setPendingRestStart(false)
       setRestActive(true)
     }
