@@ -1,13 +1,19 @@
 import { supabase } from '../supabase'
 
-export async function recalculatePRForExercise(userId, exerciseName) {
-  const { data: sets, error } = await supabase
-    .from('sets')
-    .select('weight, reps')
-    .eq('user_id', userId)
-    .eq('exercise_name', exerciseName)
+export async function recalculatePRForExercise(userId, exerciseName, knownSets = null) {
+  let sets = knownSets
 
-  if (!sets || sets.length === 0) {
+  if (sets === null) {
+    const { data, error } = await supabase
+      .from('sets')
+      .select('weight, reps')
+      .eq('user_id', userId)
+      .eq('exercise_name', exerciseName)
+    if (error) return
+    sets = data ?? []
+  }
+
+  if (sets.length === 0) {
     await supabase
       .from('personal_records')
       .delete()

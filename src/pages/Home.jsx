@@ -200,23 +200,20 @@ function Home({ user, onPRUpdate }) {
   const deleteSet = async (setId) => {
     const setToDelete = sets.find((s) => s.id === setId)
     const exerciseName = setToDelete?.exercise_name
+    const remainingSets = sets.filter((s) => s.id !== setId)
+    const remainingForExercise = remainingSets.filter((s) => s.exercise_name === exerciseName)
 
-    setSets((current) => current.filter((set) => set.id !== setId))
+    setSets(remainingSets)
 
-    const { error } = await supabase
-      .from('sets')
-      .delete()
-      .eq('id', setId)
+    const { error } = await supabase.from('sets').delete().eq('id', setId)
 
     if (error) {
       console.error('Delete failed:', error)
       return
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
     if (exerciseName) {
-      await recalculatePRForExercise(user.id, exerciseName)
+      await recalculatePRForExercise(user.id, exerciseName, remainingForExercise)
       onPRUpdate?.()
     }
   }
