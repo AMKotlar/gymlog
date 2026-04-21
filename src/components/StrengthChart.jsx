@@ -37,12 +37,36 @@ function StrengthChart({ sets, exerciseName }) {
   const polylinePoints = points.map((point, i) => `${toX(i)},${toY(point.weight)}`).join(' ')
   const prWeight = Math.max(...points.map((p) => p.weight))
   const prY = toY(prWeight)
-  const midIndex = Math.floor((points.length - 1) / 2)
+  const xAxisChartWidth = 260
+  const showMiddle = points.length >= 5
+  const formatXAxisLabel = (dateValue) => formatDateKey(dateValue).replace(/\w+,\s*/, '').replace(/\w+ /, '')
 
   const yTicks = [0, 1, 2].map((i) => {
     const value = maxWeight - (range / 2) * i
     return { value: Math.round(value), y: padding.top + (plotHeight / 2) * i }
   })
+
+  let xLabels = [
+    { index: 0, label: formatXAxisLabel(points[0].date) },
+    ...(showMiddle
+      ? [
+          {
+            index: Math.floor(points.length / 2),
+            label: formatXAxisLabel(points[Math.floor(points.length / 2)].date),
+          },
+        ]
+      : []),
+    { index: points.length - 1, label: formatXAxisLabel(points[points.length - 1].date) },
+  ]
+
+  if (xLabels.length === 3) {
+    const firstX = (xLabels[0].index / (points.length - 1)) * xAxisChartWidth
+    const middleX = (xLabels[1].index / (points.length - 1)) * xAxisChartWidth
+    const lastX = (xLabels[2].index / (points.length - 1)) * xAxisChartWidth
+    if (middleX - firstX < 60 || lastX - middleX < 60) {
+      xLabels = [xLabels[0], xLabels[2]]
+    }
+  }
 
   return (
     <div style={{ marginTop: '10px' }}>
@@ -92,15 +116,19 @@ function StrengthChart({ sets, exerciseName }) {
           )
         })}
 
-        <text x={padding.left} y={chartHeight - 4} fontFamily="'Barlow', sans-serif" fontSize="8" fill="var(--text-muted)">
-          {formatDateKey(points[0].date)}
-        </text>
-        <text x={toX(midIndex)} y={chartHeight - 4} textAnchor="middle" fontFamily="'Barlow', sans-serif" fontSize="8" fill="var(--text-muted)">
-          {formatDateKey(points[midIndex].date)}
-        </text>
-        <text x={chartWidth - padding.right} y={chartHeight - 4} textAnchor="end" fontFamily="'Barlow', sans-serif" fontSize="8" fill="var(--text-muted)">
-          {formatDateKey(points[points.length - 1].date)}
-        </text>
+        {xLabels.map((item, i) => (
+          <text
+            key={`${item.index}-${item.label}`}
+            x={toX(item.index)}
+            y={chartHeight - 4}
+            textAnchor={i === 0 ? 'start' : i === xLabels.length - 1 ? 'end' : 'middle'}
+            fontFamily="'Barlow', sans-serif"
+            fontSize="8"
+            fill="var(--text-muted)"
+          >
+            {item.label}
+          </text>
+        ))}
       </svg>
     </div>
   )
