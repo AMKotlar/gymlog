@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { recalculatePRForExercise } from '../components/PRRecalculator'
 import Skeleton from '../components/Skeleton'
 import { supabase } from '../supabase'
@@ -10,6 +11,7 @@ function rirClass(rir) {
 }
 
 function History({ user }) {
+  const location = useLocation()
   const [sets, setSets] = useState([])
   const [sessions, setSessions] = useState([])
   const [expandedDate, setExpandedDate] = useState('')
@@ -39,7 +41,7 @@ function History({ user }) {
 
   useEffect(() => {
     fetchHistoryData()
-  }, [user.id])
+  }, [user.id, location.key])
 
   const sessionByDate = useMemo(() => {
     const map = new Map()
