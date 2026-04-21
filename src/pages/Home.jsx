@@ -109,7 +109,7 @@ function Home({ user }) {
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
           </p>
-          <h1 style={{ fontSize: '28px', marginTop: '4px', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}>Today: {volume.toFixed(1)} kg</h1>
+          <h1 style={{ fontSize: '28px', marginTop: '4px', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}>Today: {volume === 0 ? '0' : volume.toFixed(1)} kg</h1>
         </div>
         {!todayCompleted ? (
           <button

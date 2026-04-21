@@ -32,12 +32,12 @@ function PRCelebration({ open, exerciseName, weight, reps, prTypes, onDismiss })
         <div style={{ fontSize: '62px', marginBottom: '10px' }}>🏆</div>
         <h2 style={{ color: 'var(--accent)', margin: '0 0 14px 0', fontSize: '30px', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}>New PR!</h2>
         {hasWeightPR ? (
-          <p style={{ margin: '0 0 8px 0', color: 'white', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
+          <p style={{ margin: '0 0 8px 0', color: 'white', fontSize: '17px', fontFamily: "'Barlow', sans-serif" }}>
             New best weight: {weight} kg on {exerciseName}
           </p>
         ) : null}
         {hasVolumePR ? (
-          <p style={{ margin: 0, color: 'white', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
+          <p style={{ margin: 0, color: 'white', fontSize: '17px', fontFamily: "'Barlow', sans-serif" }}>
             New best set: {weight} kg × {reps} = {setVolume} kg
           </p>
         ) : null}
