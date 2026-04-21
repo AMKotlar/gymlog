@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabase'
+import RestTimer from './RestTimer'
 import ScrollWheel from './ScrollWheel'
 
 const rirOptions = [
@@ -54,6 +55,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [reps, setReps] = useState(8)
   const [rir, setRir] = useState(null)
   const [restSeconds, setRestSeconds] = useState(90)
+  const [restActive, setRestActive] = useState(false)
+  const [restRemaining, setRestRemaining] = useState(0)
+  const [restTotal, setRestTotal] = useState(90)
+  const [restCompleteMessage, setRestCompleteMessage] = useState(false)
   const [setCountToday, setSetCountToday] = useState(0)
   const [lastSet, setLastSet] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -63,6 +68,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   useEffect(() => {
     if (!open) return
     setRir(null)
+    setRestActive(false)
+    setRestCompleteMessage(false)
   }, [open, exercise?.id])
 
   useEffect(() => {
@@ -98,6 +105,54 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
 
   const volume = useMemo(() => Number((weight * reps).toFixed(2)), [weight, reps])
 
+  useEffect(() => {
+    if (!restActive || restRemaining <= 0) return
+    const interval = setInterval(() => {
+      setRestRemaining((prev) => Math.max(0, prev - 1))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [restActive, restRemaining])
+
+  useEffect(() => {
+    if (!restActive || restRemaining !== 0) return
+
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(200)
+    } else if (typeof window !== 'undefined') {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const oscillator = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        oscillator.type = 'sine'
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime)
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime)
+        oscillator.connect(gain)
+        gain.connect(audioCtx.destination)
+        oscillator.start()
+        oscillator.stop(audioCtx.currentTime + 0.18)
+        oscillator.onended = () => audioCtx.close()
+      } catch {
+        // no-op if WebAudio is unavailable
+      }
+    }
+
+    setRestCompleteMessage(true)
+    const timeout = setTimeout(() => {
+      setRestActive(false)
+      setRestCompleteMessage(false)
+    }, 1500)
+    return () => clearTimeout(timeout)
+  }, [restActive, restRemaining])
+
+  const resetRestTimer = (seconds) => {
+    setRestSeconds(seconds)
+    if (restActive) {
+      setRestTotal(seconds)
+      setRestRemaining(seconds)
+      setRestCompleteMessage(false)
+    }
+  }
+
   const logSet = async () => {
     if (!canLog || !exercise || !userId) return
     setSaving(true)
@@ -113,6 +168,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setSaving(false)
     if (error) return
     onLogged()
+    setRestTotal(restSeconds)
+    setRestRemaining(restSeconds)
+    setRestCompleteMessage(false)
+    setRestActive(true)
   }
 
   if (!open || !exercise) return null
@@ -185,7 +244,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             <button
               type="button"
               key={item.seconds}
-              onClick={() => setRestSeconds(item.seconds)}
+              onClick={() => resetRestTimer(item.seconds)}
               className={`min-h-[44px] rounded-full border text-sm ${
                 restSeconds === item.seconds
                   ? 'border-[#7c3aed] bg-[#7c3aed] text-white'
@@ -206,6 +265,20 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           {saving ? 'Logging...' : 'Log set'}
         </button>
       </div>
+      <RestTimer
+        open={restActive}
+        exerciseName={exercise.name}
+        remaining={restRemaining}
+        total={restTotal}
+        restOptions={rests}
+        selectedRest={restSeconds}
+        onSelectRest={resetRestTimer}
+        onSkip={() => {
+          setRestActive(false)
+          setRestCompleteMessage(false)
+        }}
+        completeMessage={restCompleteMessage}
+      />
     </div>
   )
 }

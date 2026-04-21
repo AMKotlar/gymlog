@@ -206,7 +206,6 @@ function Home({ user }) {
         exercise={exercise}
         onClose={() => setExercise(null)}
         onLogged={() => {
-          setExercise(null)
           fetchTodaySets()
         }}
       />
