@@ -5,10 +5,10 @@ import BottomNav from './components/BottomNav'
 import InstallPrompt from './components/InstallPrompt'
 import Home from './pages/Home'
 import History from './pages/History'
-import PRs from './pages/PRs'
 import Profile from './pages/Profile'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
+import Stats from './pages/Stats'
 
 function AppShell({ user }) {
   return (
@@ -16,7 +16,8 @@ function AppShell({ user }) {
       <Routes>
         <Route path="/" element={<Home user={user} />} />
         <Route path="/history" element={<History user={user} />} />
-        <Route path="/prs" element={<PRs user={user} />} />
+        <Route path="/stats" element={<Stats user={user} />} />
+        <Route path="/prs" element={<Navigate to="/stats" replace />} />
         <Route path="/profile" element={<Profile user={user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
