@@ -49,7 +49,10 @@ function BottomNav() {
   const location = useLocation()
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-30 flex h-16 w-full max-w-[430px] -translate-x-1/2 border-t border-white/10 bg-[#0f0f1a]">
+    <nav
+      className="fixed bottom-0 left-1/2 z-30 flex h-16 w-full max-w-[430px] -translate-x-1/2"
+      style={{ borderTop: '1px solid var(--border)', background: 'var(--bg-card)' }}
+    >
       {tabs.map((tab) => {
         const active = location.pathname === tab.path
         return (
@@ -57,9 +60,8 @@ function BottomNav() {
             key={tab.path}
             type="button"
             onClick={() => navigate(tab.path)}
-            className={`flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 ${
-              active ? 'text-[#7c3aed]' : 'text-white/50'
-            }`}
+            className="flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1"
+            style={{ color: active ? 'var(--accent)' : 'var(--text-muted)' }}
           >
             {tab.icon}
             <span className="text-xs">{tab.label}</span>

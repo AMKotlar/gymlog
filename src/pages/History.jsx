@@ -90,16 +90,17 @@ function History({ user }) {
           const expanded = expandedDate === dateKey
           const session = sessionByDate.get(dateKey)
           return (
-            <div key={dateKey} className="rounded-xl border border-white/10 bg-[#17172a]">
+            <div key={dateKey} className="rounded-xl" style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
               <button
                 type="button"
                 onClick={() => setExpandedDate(expanded ? '' : dateKey)}
                 className="flex min-h-[44px] w-full items-center justify-between px-3 py-3 text-left"
               >
                 <div>
-                  <p>{new Date(dateKey).toLocaleDateString()}</p>
+                  <p style={{ fontWeight: 500 }}>{new Date(dateKey).toLocaleDateString()}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
+                      
                       {volume.toFixed(1)} kg · {dateSets.length} sets
                     </span>
                     {session?.comment ? <span style={{ fontSize: '14px' }}>💬</span> : null}
@@ -108,15 +109,15 @@ function History({ user }) {
                 <span className="text-white/50">{expanded ? '−' : '+'}</span>
               </button>
               {expanded ? (
-                <div className="space-y-2 border-t border-white/10 p-3">
+                <div className="space-y-2 p-3" style={{ borderTop: '1px solid var(--border)' }}>
                   {session?.comment ? (
-                    <div style={{ background: '#0f0f1a', borderRadius: '10px', padding: '12px', marginBottom: '12px', borderLeft: '3px solid #7c3aed' }}>
+                    <div style={{ background: 'var(--bg-base)', borderRadius: '10px', padding: '12px', marginBottom: '12px', borderLeft: '3px solid var(--accent)' }}>
                       <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workout note</p>
                       <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', lineHeight: '1.5' }}>{session.comment}</p>
                     </div>
                   ) : null}
                   {dateSets.map((set) => (
-                    <div key={set.id} className="flex items-center justify-between rounded-lg border border-white/10 p-2">
+                    <div key={set.id} className="flex items-center justify-between rounded-lg p-2" style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
                       {editingSetId === set.id ? (
                         <div style={{ width: '100%' }}>
                           <p style={{ marginBottom: '8px' }}>{set.exercise_name}</p>
@@ -128,7 +129,7 @@ function History({ user }) {
                               onChange={(event) =>
                                 setEditForm((prev) => ({ ...prev, weight: event.target.value }))
                               }
-                              style={{ flex: 1, height: '36px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: '#0f0f1a', color: 'white', padding: '0 8px' }}
+                              style={{ flex: 1, height: '36px', borderRadius: '8px', border: '1px solid var(--border-strong)', background: 'var(--bg-elevated)', color: 'white', padding: '0 8px' }}
                             />
                             <input
                               type="number"
@@ -137,7 +138,7 @@ function History({ user }) {
                               onChange={(event) =>
                                 setEditForm((prev) => ({ ...prev, reps: event.target.value }))
                               }
-                              style={{ flex: 1, height: '36px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.15)', background: '#0f0f1a', color: 'white', padding: '0 8px' }}
+                              style={{ flex: 1, height: '36px', borderRadius: '8px', border: '1px solid var(--border-strong)', background: 'var(--bg-elevated)', color: 'white', padding: '0 8px' }}
                             />
                           </div>
                           <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
@@ -151,8 +152,8 @@ function History({ user }) {
                                   height: '32px',
                                   borderRadius: '8px',
                                   border: '1px solid rgba(255,255,255,0.2)',
-                                  background: Number(editForm.rir) === value ? '#7c3aed' : '#0f0f1a',
-                                  color: 'white',
+                                  background: Number(editForm.rir) === value ? 'var(--accent)' : 'var(--bg-elevated)',
+                                  color: Number(editForm.rir) === value ? '#000000' : 'white',
                                   fontSize: '12px',
                                   cursor: 'pointer',
                                 }}
@@ -165,7 +166,7 @@ function History({ user }) {
                             <button
                               type="button"
                               onClick={() => saveEdit(set.id)}
-                              style={{ flex: 1, height: '34px', borderRadius: '8px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer' }}
+                              style={{ flex: 1, height: '34px', borderRadius: '8px', border: 'none', background: 'var(--accent)', color: '#000000', cursor: 'pointer', fontWeight: 600 }}
                             >
                               Save
                             </button>

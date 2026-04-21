@@ -106,15 +106,15 @@ function Home({ user }) {
     <div className="px-4 pb-4 pt-4">
       <header className="mb-5" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '14px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
           </p>
-          <h1 style={{ fontSize: '22px', marginTop: '4px' }}>Today: {volume.toFixed(1)} kg</h1>
+          <h1 style={{ fontSize: '28px', marginTop: '4px', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}>Today: {volume.toFixed(1)} kg</h1>
         </div>
         {!todayCompleted ? (
           <button
             onClick={() => setSearchOpen(true)}
-            style={{ background: '#7c3aed', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '24px', color: 'white', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ background: 'var(--accent)', border: 'none', borderRadius: '50%', width: '44px', height: '44px', fontSize: '24px', color: '#000000', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             +
           </button>
@@ -125,13 +125,13 @@ function Home({ user }) {
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
           <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
           <p style={{ color: 'white', fontSize: '20px', fontWeight: '500', marginBottom: '8px' }}>Workout done!</p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', marginBottom: '8px' }}>Great work today.</p>
-          <div style={{ background: '#17172a', borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '8px' }}>Great work today.</p>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '12px', padding: '16px', marginBottom: '24px', textAlign: 'left' }}>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>Today's exercises</p>
             {sets.map((set) => (
               <div key={set.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                 <span style={{ color: 'white', fontSize: '14px' }}>{set.exercise_name}</span>
-                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>{set.weight} kg × {set.reps}</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '14px', fontFamily: "'IBM Plex Mono', monospace" }}>{set.weight} kg × {set.reps}</span>
               </div>
             ))}
           </div>
@@ -146,18 +146,19 @@ function Home({ user }) {
         <>
           <section className="space-y-2">
             {sets.length === 0 ? (
-              <div className="rounded-xl border border-white/10 bg-[#17172a] p-4 text-white/60">
+              <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-secondary)' }}>
                 No sets logged yet. Tap + to start.
               </div>
             ) : (
               sets.map((set) => (
                 <div
                   key={set.id}
-                  className="flex items-center justify-between rounded-xl border border-white/10 bg-[#17172a] px-3 py-3"
+                  className="flex items-center justify-between rounded-xl px-3 py-3"
+                  style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }}
                 >
                   <div>
-                    <p>{set.exercise_name}</p>
-                    <p className="text-sm text-white/60">
+                    <p style={{ fontSize: '15px', fontWeight: 500 }}>{set.exercise_name}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)', fontFamily: "'IBM Plex Mono', monospace" }}>
                       {set.weight} {'\u00D7'} {set.reps} {'\u00B7'} Rest {set.rest_seconds}s
                     </p>
                   </div>
@@ -168,7 +169,7 @@ function Home({ user }) {
                     <button
                       type="button"
                       onClick={() => deleteSet(set.id)}
-                      style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(248,113,113,0.5)', background: 'rgba(239,68,68,0.2)', color: '#fecaca', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                      style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(255,68,68,0.5)', background: 'var(--danger-dim)', color: 'var(--danger)', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                       aria-label="Delete set"
                     >
                       Delete
@@ -182,7 +183,7 @@ function Home({ user }) {
           {sets.length > 0 ? (
             <button
               onClick={() => setShowCommentModal(true)}
-              style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '12px', color: 'rgba(255,255,255,0.6)', fontSize: '15px', cursor: 'pointer' }}
+              style={{ width: '100%', padding: '14px', marginTop: '20px', background: 'transparent', border: '1px solid var(--border-strong)', borderRadius: '12px', color: 'var(--text-secondary)', fontSize: '15px', cursor: 'pointer' }}
             >
               Done for today 🏁
             </button>
@@ -215,7 +216,7 @@ function Home({ user }) {
           style={{
             position: 'fixed',
             inset: 0,
-            background: '#0f0f1a',
+            background: 'var(--bg-base)',
             zIndex: 70,
             display: 'flex',
             alignItems: 'center',
@@ -226,10 +227,10 @@ function Home({ user }) {
           <div style={{ width: '100%', maxWidth: '430px', textAlign: 'center' }}>
             <div style={{ fontSize: '54px' }}>🏁</div>
             <h2 style={{ margin: '14px 0 10px 0', color: 'white', fontSize: '30px' }}>Great workout!</h2>
-            <p style={{ margin: '0 0 6px 0', color: 'rgba(255,255,255,0.75)', fontSize: '16px' }}>
+            <p style={{ margin: '0 0 6px 0', color: 'rgba(255,255,255,0.75)', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
               Total volume: {volume.toFixed(1)} kg
             </p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '16px' }}>Sets logged: {sets.length}</p>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>Sets logged: {sets.length}</p>
             <button
               type="button"
               onClick={() => setShowCongrats(false)}
@@ -239,8 +240,8 @@ function Home({ user }) {
                 height: '48px',
                 borderRadius: '12px',
                 border: 'none',
-                background: '#7c3aed',
-                color: 'white',
+                background: 'var(--accent)',
+                color: '#000000',
                 fontSize: '16px',
                 cursor: 'pointer',
               }}
@@ -253,7 +254,7 @@ function Home({ user }) {
 
       {showCommentModal ? (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div style={{ background: '#17172a', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '380px' }}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '380px' }}>
             <p style={{ color: 'white', fontSize: '18px', fontWeight: '500', marginBottom: '6px' }}>How was your workout?</p>
             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', marginBottom: '16px' }}>Add a note (optional)</p>
             <textarea
@@ -261,7 +262,7 @@ function Home({ user }) {
               onChange={(e) => setWorkoutComment(e.target.value)}
               placeholder="e.g. Felt strong today, shoulder was a bit tight..."
               rows={4}
-              style={{ width: '100%', background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px', color: 'white', fontSize: '14px', resize: 'none', fontFamily: 'inherit', outline: 'none' }}
+              style={{ width: '100%', background: 'var(--bg-base)', border: '1px solid var(--border-strong)', borderRadius: '10px', padding: '12px', color: 'white', fontSize: '14px', resize: 'none', fontFamily: 'inherit', outline: 'none' }}
             />
             <div style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
               <button
@@ -276,7 +277,7 @@ function Home({ user }) {
               <button
                 onClick={handleDoneForToday}
                 disabled={saving}
-                style={{ flex: 2, padding: '12px', background: '#7c3aed', border: 'none', borderRadius: '10px', color: 'white', fontSize: '14px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
+                style={{ flex: 2, padding: '12px', background: 'var(--accent)', border: 'none', borderRadius: '10px', color: '#000000', fontSize: '14px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
               >
                 {saving ? 'Saving...' : 'Save & finish 🏁'}
               </button>

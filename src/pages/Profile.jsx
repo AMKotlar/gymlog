@@ -127,7 +127,7 @@ function Profile({ user }) {
   return (
     <div style={{ padding: '16px' }}>
       <h1 style={{ marginBottom: '24px', fontSize: '24px' }}>Profile</h1>
-      <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
+      <div style={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div>
             <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>Email</p>
@@ -143,10 +143,10 @@ function Profile({ user }) {
         </div>
       </div>
 
-      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
+      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px' }}>
         <p style={{ margin: 0, marginBottom: '12px', fontSize: '15px' }}>Personal stats</p>
         {hasPersonalData ? (
-          <div style={{ marginBottom: '10px', borderRadius: '10px', background: '#0f0f1a', border: '1px solid rgba(255,255,255,0.08)', padding: '10px 12px' }}>
+          <div style={{ marginBottom: '10px', borderRadius: '10px', background: 'var(--bg-base)', border: '1px solid var(--border)', padding: '10px 12px' }}>
             <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
               {birthYear ? `Birth year ${birthYear}${age !== null ? ` (${age} years)` : ''}` : 'Birth year not set'}
             </p>
@@ -164,20 +164,20 @@ function Profile({ user }) {
               value={birthYear}
               onChange={(event) => setBirthYear(event.target.value)}
               placeholder="Year of birth"
-              style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+              style={{ height: '44px', borderRadius: '10px', border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'white', padding: '0 12px' }}
             />
             <input
               type="number"
               value={heightCm}
               onChange={(event) => setHeightCm(event.target.value)}
               placeholder="Height (cm)"
-              style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+              style={{ height: '44px', borderRadius: '10px', border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'white', padding: '0 12px' }}
             />
             <button
               type="button"
               onClick={saveProfile}
               disabled={savingProfile}
-              style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1 }}
+              style={{ height: '44px', borderRadius: '10px', border: 'none', background: 'var(--accent)', color: '#000000', cursor: 'pointer', opacity: savingProfile ? 0.6 : 1, fontWeight: 600 }}
             >
               {savingProfile ? 'Saving...' : hasPersonalData ? 'Save changes' : 'Save personal data'}
             </button>
@@ -194,7 +194,7 @@ function Profile({ user }) {
         )}
       </div>
 
-      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
+      <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px' }}>
         <p style={{ margin: 0, marginBottom: '10px', fontSize: '15px' }}>Weight log</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '12px' }}>
           <input
@@ -202,19 +202,19 @@ function Profile({ user }) {
             value={weightKg}
             onChange={(event) => setWeightKg(event.target.value)}
             placeholder="Weight (kg)"
-            style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+            style={{ height: '44px', borderRadius: '10px', border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'white', padding: '0 12px' }}
           />
           <input
             type="date"
             value={weightDate}
             onChange={(event) => setWeightDate(event.target.value)}
-            style={{ height: '44px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.15)', background: '#17172a', color: 'white', padding: '0 12px' }}
+            style={{ height: '44px', borderRadius: '10px', border: '1px solid var(--border-strong)', background: 'var(--bg-card)', color: 'white', padding: '0 12px' }}
           />
           <button
             type="button"
             onClick={saveWeightEntry}
             disabled={savingWeight}
-            style={{ height: '44px', borderRadius: '10px', border: 'none', background: '#7c3aed', color: 'white', cursor: 'pointer', opacity: savingWeight ? 0.6 : 1 }}
+            style={{ height: '44px', borderRadius: '10px', border: 'none', background: 'var(--accent)', color: '#000000', cursor: 'pointer', opacity: savingWeight ? 0.6 : 1, fontWeight: 600 }}
           >
             {savingWeight ? 'Saving...' : 'Save weight entry'}
           </button>

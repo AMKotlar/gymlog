@@ -30,7 +30,7 @@ function SignIn() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col justify-center bg-[#0f0f1a] px-5 text-white">
+    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col justify-center px-5 text-white" style={{ background: 'var(--bg-base)' }}>
       <h1 className="mb-6 text-3xl">Sign in</h1>
       <div className="space-y-3">
         <input
@@ -38,20 +38,23 @@ function SignIn() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
-          className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+          className="h-12 w-full rounded-lg px-3 outline-none"
+          style={{ border: '1px solid var(--border-strong)', background: 'var(--bg-card)' }}
         />
         <input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"
-          className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+          className="h-12 w-full rounded-lg px-3 outline-none"
+          style={{ border: '1px solid var(--border-strong)', background: 'var(--bg-card)' }}
         />
         <button
           type="button"
           onClick={handleSignIn}
           disabled={loading}
-          className="h-12 w-full rounded-lg bg-[#7c3aed] disabled:opacity-50"
+          className="h-12 w-full rounded-lg disabled:opacity-50"
+          style={{ background: 'var(--accent)', color: '#000000', fontWeight: 600 }}
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
@@ -64,7 +67,7 @@ function SignIn() {
         </button>
       </div>
       <p className="mt-4 text-sm text-white/60">
-        No account? <Link to="/signup" className="text-[#7c3aed]">Sign up</Link>
+        No account? <Link to="/signup" style={{ color: 'var(--accent)' }}>Sign up</Link>
       </p>
       {message ? <p className="mt-3 text-sm text-white/70">{message}</p> : null}
     </div>

@@ -86,11 +86,11 @@ function PRs({ user }) {
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {[1, 2, 3].map((i) => (
-            <div key={i} style={{ height: '62px', borderRadius: '10px', background: '#17172a', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <div key={i} style={{ height: '62px', borderRadius: '10px', background: 'var(--bg-card)', border: '1px solid var(--border)' }} />
           ))}
         </div>
       ) : records.length === 0 ? (
-        <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px', color: 'rgba(255,255,255,0.6)' }}>
+        <div style={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px', color: 'var(--text-secondary)' }}>
           Log your first sets to start tracking PRs
         </div>
       ) : (
@@ -101,27 +101,27 @@ function PRs({ user }) {
             const isOpen = expanded[category]
 
             return (
-              <div key={category} style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a' }}>
+              <div key={category} style={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}>
                 <button
                   type="button"
                   onClick={() => setExpanded((prev) => ({ ...prev, [category]: !prev[category] }))}
-                  style={{ width: '100%', minHeight: '44px', border: 'none', background: 'transparent', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', cursor: 'pointer' }}
+                  style={{ width: '100%', minHeight: '44px', border: 'none', background: 'transparent', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.06em', fontSize: '12px', fontWeight: 600 }}
                 >
                   <span>{category}</span>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{isOpen ? '−' : '+'}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{isOpen ? '−' : '+'}</span>
                 </button>
                 {isOpen ? (
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ borderTop: '1px solid var(--border)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {entries.map((row) => (
-                      <div key={row.exerciseName} style={{ borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', background: '#0f0f1a', padding: '10px' }}>
-                        <p style={{ margin: '0 0 6px 0', color: 'white', fontSize: '14px' }}>{row.exerciseName}</p>
-                        <p style={{ margin: '0 0 4px 0', color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
+                      <div key={row.exerciseName} style={{ borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-base)', padding: '10px' }}>
+                        <p style={{ margin: '0 0 6px 0', color: 'white', fontSize: '14px', fontWeight: 500 }}>{row.exerciseName}</p>
+                        <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
                           🏆 Best weight: {row.weightPR ?? '-'} kg
                         </p>
-                        <p style={{ margin: '0 0 4px 0', color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
+                        <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
                           📦 Best set: {row.volumePR ?? '-'} kg
                         </p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>
+                        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>
                           Date achieved: {formatDateKey(row.achievedAt)}
                         </p>
                       </div>

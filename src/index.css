@@ -1,7 +1,24 @@
 @import "tailwindcss";
 
 :root {
-  font-family: system-ui, sans-serif;
+  --bg-base: #0a0a0a;
+  --bg-card: #111111;
+  --bg-elevated: #1a1a1a;
+  --accent: #ccff00;
+  --accent-dim: rgba(204, 255, 0, 0.15);
+  --accent-border: rgba(204, 255, 0, 0.4);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.25);
+  --danger: #ff4444;
+  --danger-dim: rgba(255, 68, 68, 0.15);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-pill: 999px;
+
+  font-family: 'Barlow', sans-serif;
 }
 
 * {
@@ -11,8 +28,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: #0f0f1a;
-  color: #ffffff;
+  background: var(--bg-base);
+  color: var(--text-primary);
 }
 
 a {
@@ -22,6 +39,7 @@ a {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }

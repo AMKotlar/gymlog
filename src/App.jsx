@@ -11,7 +11,7 @@ import SignUp from './pages/SignUp'
 
 function AppShell({ user }) {
   return (
-    <div className="mx-auto min-h-screen w-full max-w-[430px] bg-[#0f0f1a] pb-20">
+    <div className="mx-auto min-h-screen w-full max-w-[430px] pb-20" style={{ background: 'var(--bg-base)' }}>
       <Routes>
         <Route path="/" element={<Home user={user} />} />
         <Route path="/history" element={<History user={user} />} />
@@ -45,7 +45,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0f0f1a] text-white">
+      <div className="flex min-h-screen items-center justify-center text-white" style={{ background: 'var(--bg-base)' }}>
         Loading...
       </div>
     )

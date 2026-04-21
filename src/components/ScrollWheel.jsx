@@ -25,7 +25,8 @@ function ScrollWheel({ value, onChange, step, min, format = (v) => `${v}` }) {
 
   return (
     <div
-      className="h-44 w-full touch-none select-none overflow-hidden rounded-xl border border-white/10 bg-[#141425]"
+      className="h-44 w-full touch-none select-none overflow-hidden rounded-xl"
+      style={{ border: '1px solid var(--border)', background: 'var(--bg-elevated)' }}
       onPointerDown={(event) => {
         dragState.current = { active: true, y: event.clientY }
       }}
@@ -50,9 +51,12 @@ function ScrollWheel({ value, onChange, step, min, format = (v) => `${v}` }) {
           return (
             <div
               key={`${item}-${idx}`}
-              className={`transition-all ${
-                selected ? 'text-3xl text-white' : idx === 1 || idx === 3 ? 'text-white/60' : 'text-white/25'
-              }`}
+              className="transition-all"
+              style={{
+                color: selected ? 'var(--text-primary)' : idx === 1 || idx === 3 ? 'var(--text-secondary)' : 'var(--text-muted)',
+                fontSize: selected ? '30px' : '18px',
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}
             >
               {format(item)}
             </div>

@@ -79,7 +79,7 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
   if (!open) return null
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: '#0f0f1a' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'var(--bg-base)' }}>
       <div
         style={{
           margin: '0 auto',
@@ -101,8 +101,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
               height: '48px',
               width: '100%',
               borderRadius: '10px',
-              border: '1px solid rgba(255,255,255,0.15)',
-              background: '#17172a',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--bg-card)',
               padding: '0 12px',
               color: 'white',
               outline: 'none',
@@ -126,7 +126,7 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                   <button
                     key={name}
                     onClick={() => onSelect({ name, category: '' })}
-                    style={{ background: '#17172a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '20px', padding: '8px 14px', color: 'white', fontSize: '13px', whiteSpace: 'nowrap', cursor: 'pointer' }}
+                    style={{ background: 'var(--bg-card)', border: '1px solid var(--border-strong)', borderRadius: '20px', padding: '8px 14px', color: 'white', fontSize: '13px', whiteSpace: 'nowrap', cursor: 'pointer' }}
                   >
                     {name}
                   </button>
@@ -147,14 +147,15 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                     type="button"
                     onClick={() => setSelectedCategory(category)}
                     style={{
-                      border: '1px solid rgba(255,255,255,0.15)',
+                      border: '1px solid var(--border-strong)',
                       borderRadius: '20px',
                       padding: '8px 12px',
                       color: 'white',
                       fontSize: '13px',
                       whiteSpace: 'nowrap',
                       cursor: 'pointer',
-                      background: selectedCategory === category ? '#7c3aed' : '#17172a',
+                      background: selectedCategory === category ? 'var(--accent)' : 'var(--bg-card)',
+                      color: selectedCategory === category ? '#000000' : 'white',
                     }}
                   >
                     {category}
@@ -177,8 +178,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  background: '#17172a',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-card)',
                   padding: '12px',
                   textAlign: 'left',
                   color: 'white',
@@ -188,7 +189,7 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                 <span
                   style={{
                     borderRadius: '999px',
-                    background: 'rgba(255,255,255,0.1)',
+                    background: 'var(--bg-elevated)',
                     padding: '4px 8px',
                     fontSize: '12px',
                     color: 'rgba(255,255,255,0.7)',
@@ -209,8 +210,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
               height: '44px',
               width: '100%',
               borderRadius: '10px',
-              border: '1px solid #7c3aed',
-              color: '#7c3aed',
+              border: '1px solid var(--accent-border)',
+              color: 'var(--accent)',
               background: 'transparent',
             }}
           >
@@ -226,8 +227,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                   height: '44px',
                   width: '100%',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: '#17172a',
+                  border: '1px solid var(--border-strong)',
+                  background: 'var(--bg-card)',
                   padding: '0 12px',
                   color: 'white',
                   outline: 'none',
@@ -242,8 +243,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                   height: '44px',
                   width: '100%',
                   borderRadius: '10px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: '#17172a',
+                  border: '1px solid var(--border-strong)',
+                  background: 'var(--bg-card)',
                   padding: '0 12px',
                   color: 'white',
                   outline: 'none',
@@ -263,8 +264,8 @@ function ExerciseSearch({ open, userId, onClose, onSelect }) {
                   height: '44px',
                   width: '100%',
                   borderRadius: '10px',
-                  background: '#7c3aed',
-                  color: 'white',
+                  background: 'var(--accent)',
+                  color: '#000000',
                   opacity: saving ? 0.6 : 1,
                 }}
               >

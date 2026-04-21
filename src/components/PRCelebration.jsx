@@ -20,7 +20,7 @@ function PRCelebration({ open, exerciseName, weight, reps, prTypes, onDismiss })
         position: 'fixed',
         inset: 0,
         zIndex: 90,
-        background: '#0f0f1a',
+        background: 'var(--bg-base)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -30,14 +30,14 @@ function PRCelebration({ open, exerciseName, weight, reps, prTypes, onDismiss })
     >
       <div style={{ width: '100%', maxWidth: '430px', textAlign: 'center' }}>
         <div style={{ fontSize: '62px', marginBottom: '10px' }}>🏆</div>
-        <h2 style={{ color: 'white', margin: '0 0 14px 0', fontSize: '30px' }}>New PR!</h2>
+        <h2 style={{ color: 'var(--accent)', margin: '0 0 14px 0', fontSize: '30px', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}>New PR!</h2>
         {hasWeightPR ? (
-          <p style={{ margin: '0 0 8px 0', color: 'rgba(255,255,255,0.85)', fontSize: '16px' }}>
+          <p style={{ margin: '0 0 8px 0', color: 'white', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
             New best weight: {weight} kg on {exerciseName}
           </p>
         ) : null}
         {hasVolumePR ? (
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)', fontSize: '16px' }}>
+          <p style={{ margin: 0, color: 'white', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
             New best set: {weight} kg × {reps} = {setVolume} kg
           </p>
         ) : null}

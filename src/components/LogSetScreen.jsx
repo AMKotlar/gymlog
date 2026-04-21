@@ -274,12 +274,12 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   if (!open || !exercise) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0f0f1a]">
+    <div className="fixed inset-0 z-50" style={{ background: 'var(--bg-base)' }}>
       <div className="mx-auto h-full w-full max-w-[430px] overflow-y-auto p-4 pb-6">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-xl">{exercise.name}</h2>
-            <div className="mt-1 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs">
+            <h2 className="text-xl" style={{ fontSize: '22px', fontWeight: 700 }}>{exercise.name}</h2>
+            <div className="mt-1 inline-flex rounded-full px-3 py-1 text-xs" style={{ background: 'var(--accent-dim)', color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace" }}>
               Set {setCountToday + 1}
             </div>
           </div>
@@ -293,9 +293,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             style={{
               marginBottom: '12px',
               borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: '#17172a',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-elevated)',
               padding: '10px',
+              borderLeft: '3px solid var(--accent)',
             }}
           >
             <p style={{ margin: 0, marginBottom: '8px', color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
@@ -338,7 +339,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             <ScrollWheel value={reps} onChange={setReps} step={1} min={1} format={(item) => `${item}`} />
           </div>
         </div>
-        <p className="mb-4 text-center text-sm text-white/60">Volume this set: {formatWeight(volume)} kg</p>
+        <p className="mb-4 text-center text-sm" style={{ color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace" }}>Volume this set: {formatWeight(volume)} kg</p>
 
         <p style={{ color: 'white', fontSize: '15px', fontWeight: '500', marginBottom: '10px' }}>
           How did you feel after this set?
@@ -356,8 +357,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
               style={{
                 minHeight: '90px',
                 borderRadius: '12px',
-                border: rir === option.value ? option.activeBorder : '1px solid rgba(255,255,255,0.15)',
-                background: rir === option.value ? option.activeBg : '#17172a',
+                border: rir === option.value ? option.activeBorder : '1px solid var(--border-strong)',
+                background: rir === option.value ? option.activeBg : 'var(--bg-elevated)',
                 textAlign: 'left',
                 padding: '10px',
                 color: rir === option.value ? option.activeText : 'white',
@@ -378,9 +379,14 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
               onClick={() => resetRestTimer(item.seconds)}
               className={`min-h-[44px] rounded-full border text-sm ${
                 restSeconds === item.seconds
-                  ? 'border-[#7c3aed] bg-[#7c3aed] text-white'
-                  : 'border-white/15 bg-[#17172a] text-white/70'
+                  ? ''
+                  : ''
               }`}
+              style={
+                restSeconds === item.seconds
+                  ? { border: '1px solid var(--accent-border)', background: 'var(--accent)', color: '#000000' }
+                  : { border: '1px solid var(--border-strong)', background: 'var(--bg-elevated)', color: 'var(--text-secondary)' }
+              }
             >
               {item.label}
             </button>
@@ -391,7 +397,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           type="button"
           onClick={logSet}
           disabled={!canLog || saving}
-          className="h-12 w-full rounded-xl bg-[#7c3aed] text-base disabled:opacity-40"
+          className="h-12 w-full rounded-xl text-base disabled:opacity-40"
+          style={{ background: 'var(--accent)', color: '#000000', fontFamily: "'IBM Plex Mono', monospace", fontWeight: 700 }}
         >
           {saving ? 'Logging...' : 'Log set'}
         </button>

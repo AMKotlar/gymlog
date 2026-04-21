@@ -26,7 +26,7 @@ function RestTimer({
         position: 'fixed',
         inset: 0,
         zIndex: 80,
-        background: '#0f0f1a',
+        background: 'var(--bg-base)',
         display: 'flex',
         justifyContent: 'center',
       }}
@@ -43,17 +43,17 @@ function RestTimer({
         }}
       >
         <div>
-          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>Rest timer</p>
-          <p style={{ color: 'white', fontSize: '20px', margin: '6px 0 0 0' }}>{exerciseName}</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>Rest timer</p>
+          <p style={{ color: 'var(--text-primary)', fontSize: '20px', margin: '6px 0 0 0' }}>{exerciseName}</p>
         </div>
 
         <div style={{ textAlign: 'center' }}>
           <p
             style={{
-              color: 'white',
-              fontSize: '74px',
+              color: 'var(--accent)',
+              fontSize: '72px',
               margin: 0,
-              fontFamily: 'monospace',
+              fontFamily: "'IBM Plex Mono', monospace",
               fontVariantNumeric: 'tabular-nums',
               letterSpacing: '0.03em',
             }}
@@ -61,14 +61,14 @@ function RestTimer({
             {formatClock(remaining)}
           </p>
           {completeMessage ? (
-            <p style={{ margin: '10px 0 0 0', color: '#86efac', fontSize: '15px' }}>Rest complete — go!</p>
+            <p style={{ margin: '10px 0 0 0', color: 'var(--accent)', fontSize: '15px', fontFamily: "'IBM Plex Mono', monospace" }}>Rest complete — go!</p>
           ) : null}
           <div
             style={{
               marginTop: '18px',
               width: '100%',
               height: '4px',
-              background: 'rgba(255,255,255,0.12)',
+              background: 'var(--border)',
               borderRadius: '999px',
               overflow: 'hidden',
             }}
@@ -77,7 +77,7 @@ function RestTimer({
               style={{
                 width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
                 height: '100%',
-                background: '#7c3aed',
+                background: 'var(--accent)',
               }}
             />
           </div>
@@ -93,9 +93,9 @@ function RestTimer({
                 style={{
                   minHeight: '44px',
                   borderRadius: '999px',
-                  border: selectedRest === item.seconds ? '1px solid #7c3aed' : '1px solid rgba(255,255,255,0.15)',
-                  background: selectedRest === item.seconds ? '#7c3aed' : '#17172a',
-                  color: selectedRest === item.seconds ? 'white' : 'rgba(255,255,255,0.7)',
+                  border: selectedRest === item.seconds ? '1px solid var(--accent-border)' : '1px solid var(--border-strong)',
+                  background: selectedRest === item.seconds ? 'var(--accent)' : 'var(--bg-elevated)',
+                  color: selectedRest === item.seconds ? '#000000' : 'var(--text-secondary)',
                   cursor: 'pointer',
                   fontSize: '13px',
                 }}
@@ -111,9 +111,9 @@ function RestTimer({
               width: '100%',
               minHeight: '44px',
               borderRadius: '10px',
-              border: '1px solid rgba(255,255,255,0.2)',
+              border: 'none',
               background: 'transparent',
-              color: 'rgba(255,255,255,0.6)',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
             }}
           >

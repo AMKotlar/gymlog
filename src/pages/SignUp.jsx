@@ -21,7 +21,7 @@ function SignUp() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col justify-center bg-[#0f0f1a] px-5 text-white">
+    <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col justify-center px-5 text-white" style={{ background: 'var(--bg-base)' }}>
       <h1 className="mb-6 text-3xl">Create account</h1>
       <div className="space-y-3">
         <input
@@ -29,33 +29,37 @@ function SignUp() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="Email"
-          className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+          className="h-12 w-full rounded-lg px-3 outline-none"
+          style={{ border: '1px solid var(--border-strong)', background: 'var(--bg-card)' }}
         />
         <input
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Password"
-          className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+          className="h-12 w-full rounded-lg px-3 outline-none"
+          style={{ border: '1px solid var(--border-strong)', background: 'var(--bg-card)' }}
         />
         <input
           type="password"
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
           placeholder="Confirm password"
-          className="h-12 w-full rounded-lg border border-white/15 bg-[#17172a] px-3 outline-none"
+          className="h-12 w-full rounded-lg px-3 outline-none"
+          style={{ border: '1px solid var(--border-strong)', background: 'var(--bg-card)' }}
         />
         <button
           type="button"
           onClick={handleSignUp}
           disabled={loading}
-          className="h-12 w-full rounded-lg bg-[#7c3aed] disabled:opacity-50"
+          className="h-12 w-full rounded-lg disabled:opacity-50"
+          style={{ background: 'var(--accent)', color: '#000000', fontWeight: 600 }}
         >
           {loading ? 'Creating account...' : 'Create account'}
         </button>
       </div>
       <p className="mt-4 text-sm text-white/60">
-        Have an account? <Link to="/signin" className="text-[#7c3aed]">Sign in</Link>
+        Have an account? <Link to="/signin" style={{ color: 'var(--accent)' }}>Sign in</Link>
       </p>
       {message ? <p className="mt-3 text-sm text-white/70">{message}</p> : null}
     </div>
