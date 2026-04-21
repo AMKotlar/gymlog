@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
+import QuickStartModal from '../components/QuickStartModal'
+import allExercises from '../exercises.json'
 import { supabase } from '../supabase'
 
 function getLocalDateKey() {
@@ -17,6 +19,62 @@ function rirBadgeStyle(rir) {
   return 'bg-green-500/20 text-green-300'
 }
 
+const SESSION_TYPES = {
+  PUSH: { label: 'Push', emoji: '💪', categories: ['Chest', 'Shoulders', 'Arms'] },
+  PULL: { label: 'Pull', emoji: '🔙', categories: ['Back', 'Arms'] },
+  LEGS: { label: 'Legs', emoji: '🦵', categories: ['Legs'] },
+  UPPER: { label: 'Upper', emoji: '⬆️', categories: ['Chest', 'Shoulders', 'Arms', 'Back'] },
+  LOWER: { label: 'Lower', emoji: '⬇️', categories: ['Legs'] },
+  FULL: { label: 'Full Body', emoji: '⚡', categories: ['Chest', 'Shoulders', 'Arms', 'Back', 'Legs', 'Core'] },
+}
+
+const PUSH_PULL_LEGS_ROTATION = ['PUSH', 'PULL', 'LEGS']
+const UPPER_LOWER_ROTATION = ['UPPER', 'LOWER', 'UPPER', 'LOWER']
+
+function localDayStartUTC(dateValue) {
+  const date = new Date(dateValue)
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString()
+}
+
+function inferSessionTypeFromCategories(categories) {
+  if (!categories.length) return null
+  const counts = categories.reduce((acc, category) => {
+    acc[category] = (acc[category] ?? 0) + 1
+    return acc
+  }, {})
+  const chestShouldersCount = (counts.Chest ?? 0) + (counts.Shoulders ?? 0)
+  const backCount = counts.Back ?? 0
+  const legsCount = counts.Legs ?? 0
+  const coreCount = counts.Core ?? 0
+  const armsCount = counts.Arms ?? 0
+  const unique = new Set(categories)
+
+  if (legsCount > 0 && unique.size === 1) return 'LEGS'
+  if (backCount > chestShouldersCount && backCount >= armsCount) return 'PULL'
+  if (chestShouldersCount > backCount && chestShouldersCount >= legsCount) return 'PUSH'
+  if (legsCount > 0 && chestShouldersCount + backCount + armsCount + coreCount > 0) return 'FULL'
+  if (legsCount > 0) return 'LOWER'
+  if (chestShouldersCount + backCount + armsCount > 0) return 'UPPER'
+  return 'FULL'
+}
+
+function getSuggestedSession(recentSessions) {
+  if (!recentSessions.length) return 'PUSH'
+  const lastType = recentSessions[0].type
+  if (!lastType) return 'PUSH'
+
+  const rotationIndex = PUSH_PULL_LEGS_ROTATION.indexOf(lastType)
+  if (rotationIndex >= 0) {
+    return PUSH_PULL_LEGS_ROTATION[(rotationIndex + 1) % PUSH_PULL_LEGS_ROTATION.length]
+  }
+  const upperLowerIndex = UPPER_LOWER_ROTATION.lastIndexOf(lastType)
+  if (upperLowerIndex >= 0) {
+    return UPPER_LOWER_ROTATION[(upperLowerIndex + 1) % UPPER_LOWER_ROTATION.length]
+  }
+  if (lastType === 'FULL') return 'PUSH'
+  return 'PUSH'
+}
+
 function Home({ user }) {
   const [sets, setSets] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
@@ -26,6 +84,18 @@ function Home({ user }) {
   const [showCommentModal, setShowCommentModal] = useState(false)
   const [todayCompleted, setTodayCompleted] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [suggestedSession, setSuggestedSession] = useState(null)
+  const [daysSinceLastSession, setDaysSinceLastSession] = useState(0)
+  const [quickStartExercises, setQuickStartExercises] = useState([])
+  const [showQuickStartModal, setShowQuickStartModal] = useState(false)
+
+  const exerciseByName = useMemo(() => {
+    const map = new Map()
+    for (const item of allExercises) {
+      map.set(item.name, item)
+    }
+    return map
+  }, [])
 
   const fetchTodaySets = async () => {
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
@@ -57,6 +127,58 @@ function Home({ user }) {
       })
   }, [user.id])
 
+  useEffect(() => {
+    const fetchSmartSuggestion = async () => {
+      const now = new Date()
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const sevenDaysAgoUTC = localDayStartUTC(sevenDaysAgo)
+      const { data: recentSets } = await supabase
+        .from('sets')
+        .select('exercise_name, logged_at')
+        .eq('user_id', user.id)
+        .gte('logged_at', sevenDaysAgoUTC)
+        .order('logged_at', { ascending: false })
+
+      if (!recentSets || recentSets.length === 0) {
+        setSuggestedSession('PUSH')
+        setDaysSinceLastSession(0)
+        return
+      }
+
+      const byDate = new Map()
+      for (const item of recentSets) {
+        const key = item.logged_at.split('T')[0]
+        if (!byDate.has(key)) byDate.set(key, [])
+        byDate.get(key).push(item)
+      }
+
+      const recentSessions = Array.from(byDate.entries())
+        .sort(([a], [b]) => (a < b ? 1 : -1))
+        .slice(0, 7)
+        .map(([date, daySets]) => {
+          const categories = daySets
+            .map((set) => exerciseByName.get(set.exercise_name)?.category)
+            .filter(Boolean)
+          return { date, type: inferSessionTypeFromCategories(categories) }
+        })
+
+      const lastDate = recentSessions[0]?.date
+      if (lastDate) {
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        const lastStart = new Date(`${lastDate}T00:00:00`)
+        const diffMs = todayStart.getTime() - lastStart.getTime()
+        const diffDays = Math.max(0, Math.floor(diffMs / 86400000))
+        setDaysSinceLastSession(diffDays)
+      } else {
+        setDaysSinceLastSession(0)
+      }
+      setSuggestedSession(getSuggestedSession(recentSessions))
+    }
+
+    fetchSmartSuggestion()
+  }, [user.id, exerciseByName])
+
   const deleteSet = async (setId) => {
     setSets((current) => current.filter((set) => set.id !== setId))
     await supabase.from('sets').delete().eq('id', setId)
@@ -66,6 +188,40 @@ function Home({ user }) {
     () => sets.reduce((sum, item) => sum + Number(item.weight) * Number(item.reps), 0),
     [sets],
   )
+
+  const handleQuickStart = async (sessionType) => {
+    const session = SESSION_TYPES[sessionType]
+    if (!session) return
+
+    const thirtyDaysAgo = localDayStartUTC(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+    const { data: historySets } = await supabase
+      .from('sets')
+      .select('exercise_name, logged_at')
+      .eq('user_id', user.id)
+      .gte('logged_at', thirtyDaysAgo)
+      .order('logged_at', { ascending: false })
+
+    const relevantExercises = []
+    const seen = new Set()
+    for (const set of historySets ?? []) {
+      const exerciseMatch = exerciseByName.get(set.exercise_name)
+      if (!exerciseMatch) continue
+      if (!session.categories.includes(exerciseMatch.category)) continue
+      if (seen.has(set.exercise_name)) continue
+      seen.add(set.exercise_name)
+      relevantExercises.push({ name: set.exercise_name, category: exerciseMatch.category })
+      if (relevantExercises.length === 6) break
+    }
+
+    if (relevantExercises.length === 0) {
+      setSearchOpen(true)
+      return
+    }
+
+    setSuggestedSession(sessionType)
+    setQuickStartExercises(relevantExercises)
+    setShowQuickStartModal(true)
+  }
 
   const handleDoneForToday = async () => {
     setSaving(true)
@@ -146,8 +302,69 @@ function Home({ user }) {
         <>
           <section className="space-y-2">
             {sets.length === 0 ? (
-              <div className="rounded-xl p-4" style={{ border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-secondary)' }}>
-                No sets logged yet. Tap + to start.
+              <div
+                className="rounded-xl p-4"
+                style={{ border: '1px solid var(--border)', background: 'var(--bg-card)' }}
+              >
+                {daysSinceLastSession >= 3 ? (
+                  <p style={{ color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', marginBottom: '16px' }}>
+                    WELCOME BACK — {daysSinceLastSession} DAYS SINCE LAST SESSION
+                  </p>
+                ) : null}
+
+                {suggestedSession ? (
+                  <div
+                    onClick={() => handleQuickStart(suggestedSession)}
+                    style={{
+                      background: 'var(--accent-dim)',
+                      border: '1px solid var(--accent-border)',
+                      borderRadius: 'var(--radius)',
+                      padding: '16px',
+                      marginBottom: '16px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <p style={{ color: 'var(--text-muted)', fontFamily: "'Barlow', sans-serif", fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '6px' }}>
+                      SUGGESTED TODAY
+                    </p>
+                    <p style={{ color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace", fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>
+                      {SESSION_TYPES[suggestedSession].emoji} {SESSION_TYPES[suggestedSession].label.toUpperCase()} DAY
+                    </p>
+                    <p style={{ color: 'var(--text-secondary)', fontFamily: "'Barlow', sans-serif", fontSize: '13px' }}>
+                      Based on your recent training - tap to load last {SESSION_TYPES[suggestedSession].label} exercises
+                    </p>
+                  </div>
+                ) : null}
+
+                <p style={{ color: 'var(--text-muted)', fontFamily: "'Barlow', sans-serif", fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px' }}>
+                  {suggestedSession ? 'OR CHOOSE:' : 'WHAT ARE YOU TRAINING TODAY?'}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                  {Object.entries(SESSION_TYPES).map(([key, session]) => (
+                    <button
+                      key={key}
+                      onClick={() => handleQuickStart(key)}
+                      style={{
+                        background: suggestedSession === key ? 'var(--accent-dim)' : 'var(--bg-card)',
+                        border: suggestedSession === key ? '1px solid var(--accent-border)' : '1px solid var(--border)',
+                        borderRadius: 'var(--radius)',
+                        padding: '12px 8px',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                      }}
+                    >
+                      <div style={{ fontSize: '20px', marginBottom: '4px' }}>{session.emoji}</div>
+                      <div style={{ color: 'white', fontFamily: "'Barlow', sans-serif", fontSize: '12px', fontWeight: 600 }}>{session.label}</div>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  style={{ width: '100%', background: 'transparent', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px', color: 'var(--text-muted)', fontFamily: "'Barlow', sans-serif", fontSize: '13px', cursor: 'pointer' }}
+                >
+                  Browse all exercises instead
+                </button>
               </div>
             ) : (
               sets.map((set) => (
@@ -208,6 +425,23 @@ function Home({ user }) {
         onClose={() => setExercise(null)}
         onLogged={() => {
           fetchTodaySets()
+        }}
+      />
+
+      <QuickStartModal
+        open={showQuickStartModal}
+        sessionType={suggestedSession}
+        sessionLabel={suggestedSession ? SESSION_TYPES[suggestedSession].label : ''}
+        exercises={quickStartExercises}
+        onClose={() => setShowQuickStartModal(false)}
+        onSelect={(exerciseChoice) => {
+          const fullExercise = exerciseByName.get(exerciseChoice.name) ?? exerciseChoice
+          setShowQuickStartModal(false)
+          setExercise(fullExercise)
+        }}
+        onSearchAll={() => {
+          setShowQuickStartModal(false)
+          setSearchOpen(true)
         }}
       />
 
