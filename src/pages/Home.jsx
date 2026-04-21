@@ -198,11 +198,14 @@ function Home({ user }) {
   }, [user.id, exerciseByName])
 
   const deleteSet = async (setId) => {
+    console.log('deleteSet called', setId)
     const setToDelete = sets.find((s) => s.id === setId)
+    console.log('setToDelete', setToDelete)
     const exerciseName = setToDelete?.exercise_name
     setSets((current) => current.filter((set) => set.id !== setId))
     await supabase.from('sets').delete().eq('id', setId)
     if (exerciseName) {
+      console.log('calling recalculate for', exerciseName)
       await recalculatePRForExercise(user.id, exerciseName)
     }
   }
