@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabase'
+import PRCelebration from './PRCelebration'
 import RestTimer from './RestTimer'
 import ScrollWheel from './ScrollWheel'
 
@@ -59,6 +60,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [restRemaining, setRestRemaining] = useState(0)
   const [restTotal, setRestTotal] = useState(90)
   const [restCompleteMessage, setRestCompleteMessage] = useState(false)
+  const [newPRs, setNewPRs] = useState([])
+  const [pendingRestStart, setPendingRestStart] = useState(false)
   const [setCountToday, setSetCountToday] = useState(0)
   const [lastSet, setLastSet] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -70,6 +73,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setRir(null)
     setRestActive(false)
     setRestCompleteMessage(false)
+    setNewPRs([])
+    setPendingRestStart(false)
   }, [open, exercise?.id])
 
   useEffect(() => {
@@ -168,10 +173,67 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setSaving(false)
     if (error) return
     onLogged()
+
+    const setVolume = Number((Number(weight) * Number(reps)).toFixed(2))
+    const { data: currentPRs } = await supabase
+      .from('personal_records')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('exercise_name', exercise.name)
+
+    const weightPR = (currentPRs ?? []).find((item) => item.pr_type === 'weight')
+    const volumePR = (currentPRs ?? []).find((item) => item.pr_type === 'volume')
+    const isWeightPR = !weightPR || Number(weight) > Number(weightPR.value)
+    const isVolumePR = !volumePR || setVolume > Number(volumePR.value)
+
+    if (isWeightPR) {
+      await supabase.from('personal_records').upsert(
+        {
+          user_id: userId,
+          exercise_name: exercise.name,
+          pr_type: 'weight',
+          value: Number(weight),
+          achieved_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,exercise_name,pr_type' },
+      )
+    }
+
+    if (isVolumePR) {
+      await supabase.from('personal_records').upsert(
+        {
+          user_id: userId,
+          exercise_name: exercise.name,
+          pr_type: 'volume',
+          value: setVolume,
+          achieved_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,exercise_name,pr_type' },
+      )
+    }
+
+    const achieved = []
+    if (isWeightPR) achieved.push('weight')
+    if (isVolumePR) achieved.push('volume')
+
     setRestTotal(restSeconds)
     setRestRemaining(restSeconds)
     setRestCompleteMessage(false)
-    setRestActive(true)
+    setPendingRestStart(true)
+    setNewPRs(achieved)
+
+    if (achieved.length === 0) {
+      setPendingRestStart(false)
+      setRestActive(true)
+    }
+  }
+
+  const dismissPRAndStartRest = () => {
+    setNewPRs([])
+    if (pendingRestStart) {
+      setPendingRestStart(false)
+      setRestActive(true)
+    }
   }
 
   if (!open || !exercise) return null
@@ -278,6 +340,14 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           setRestCompleteMessage(false)
         }}
         completeMessage={restCompleteMessage}
+      />
+      <PRCelebration
+        open={newPRs.length > 0}
+        exerciseName={exercise.name}
+        weight={weight}
+        reps={reps}
+        prTypes={newPRs}
+        onDismiss={dismissPRAndStartRest}
       />
     </div>
   )
