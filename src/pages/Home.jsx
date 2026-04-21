@@ -7,14 +7,7 @@ import Skeleton from '../components/Skeleton'
 import { effectiveRepsChange, totalEffectiveReps } from '../effectiveReps'
 import allExercises from '../exercises.json'
 import { supabase } from '../supabase'
-
-function getLocalDateKey() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
+import { localDateKey, localDateKeyFromISO, localDayEndUTC, localDayStartUTC } from '../utils/dateUtils'
 
 function rirBadgeStyle(rir) {
   if (rir === 0) return 'bg-red-500/20 text-red-300'
@@ -33,21 +26,6 @@ const SESSION_TYPES = {
 
 const PUSH_PULL_LEGS_ROTATION = ['PUSH', 'PULL', 'LEGS']
 const UPPER_LOWER_ROTATION = ['UPPER', 'LOWER', 'UPPER', 'LOWER']
-
-function localDayStartUTC(dateValue) {
-  const date = dateValue ? new Date(dateValue) : new Date()
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString()
-}
-
-function localDateKeyFromISO(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
 
 function inferSessionTypeFromCategories(categories) {
   if (!categories.length) return null
@@ -115,8 +93,8 @@ function Home({ user, onPRUpdate }) {
 
   const fetchTodaySets = async (showLoader = true) => {
     if (showLoader) setLoading(true)
-    const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
-    const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
+    const todayStart = localDayStartUTC()
+    const tomorrowStart = localDayEndUTC()
     const { data } = await supabase
       .from('sets')
       .select('*')
@@ -137,7 +115,7 @@ function Home({ user, onPRUpdate }) {
       .from('sessions')
       .select('id')
       .eq('user_id', user.id)
-      .eq('date', getLocalDateKey())
+      .eq('date', localDateKey())
       .order('completed_at', { ascending: false })
       .limit(1)
       .then(({ data }) => {
@@ -283,20 +261,11 @@ function Home({ user, onPRUpdate }) {
       setCongratsEffReps(currentEffReps)
       setCongratsChange(changePercent)
 
-      let { error } = await supabase.from('sessions').insert({
+      const { error } = await supabase.from('sessions').insert({
         user_id: user.id,
-        date: new Date().toISOString().split('T')[0],
-        completed_at: new Date().toISOString(),
+        date: localDateKey(),
         comment: workoutComment || null,
       })
-      if (error?.message?.toLowerCase().includes('completed_at')) {
-        const retry = await supabase.from('sessions').insert({
-          user_id: user.id,
-          date: new Date().toISOString().split('T')[0],
-          comment: workoutComment || null,
-        })
-        error = retry.error
-      }
       if (error) {
         console.error('Session insert error:', error)
         alert('Could not save session: ' + error.message)
@@ -467,10 +436,22 @@ function Home({ user, onPRUpdate }) {
                     <button
                       type="button"
                       onClick={() => deleteSet(set.id)}
-                      style={{ minHeight: '44px', minWidth: '72px', padding: '0 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', border: '1px solid rgba(255,68,68,0.5)', background: 'var(--danger-dim)', color: 'var(--danger)', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                      style={{
+                        minHeight: '36px',
+                        minWidth: '36px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                        background: 'transparent',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                      }}
                       aria-label="Delete set"
                     >
-                      Delete
+                      ✕
                     </button>
                   </div>
                 </div>

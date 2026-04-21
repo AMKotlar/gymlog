@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { effectiveReps } from '../effectiveReps'
 import { supabase } from '../supabase'
-import { formatDateKey } from '../utils/dateUtils'
+import { formatDateKey, localDateKeyFromISO, localDayStartUTC } from '../utils/dateUtils'
 import PRCelebration from './PRCelebration'
 import RestTimer from './RestTimer'
 import ScrollWheel from './ScrollWheel'
@@ -46,22 +46,6 @@ const rests = [
 
 function formatWeight(value) {
   return value % 1 === 0 ? `${value}` : value.toFixed(1)
-}
-
-function localDayStartUTC() {
-  const now = new Date()
-  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  return localMidnight.toISOString()
-}
-
-function localDateKeyFromISO(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }
 
 function rirBadgeStyle(rir) {
@@ -156,8 +140,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         setWeight(previous[0].weight ?? 20)
         setReps(previous[0].reps ?? 8)
         setRestSeconds(previous[0].rest_seconds ?? 90)
-        setShowContract(true)
-        setSelectedContractPath('A')
+        if (entries.length === 0) {
+          setShowContract(true)
+          setSelectedContractPath('A')
+        }
       } else {
         setLastSet(null)
         setWeight(20)
@@ -243,6 +229,9 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
 
   const logSet = async () => {
     if (!canLog || !exercise || !userId) return
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(50)
+    }
     setSaving(true)
     const { error } = await supabase.from('sets').insert({
       user_id: userId,

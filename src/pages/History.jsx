@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { recalculatePRForExercise } from '../components/PRRecalculator'
 import Skeleton from '../components/Skeleton'
 import { supabase } from '../supabase'
+import { formatDateKey, localDateKeyFromISO } from '../utils/dateUtils'
 
 function rirClass(rir) {
   if (rir === 0) return 'bg-red-500/20 text-red-300'
@@ -97,7 +98,7 @@ function History({ user, onPRUpdate }) {
   const grouped = useMemo(() => {
     const map = new Map()
     for (const set of sets) {
-      const dateKey = String(set.logged_at).split('T')[0]
+      const dateKey = localDateKeyFromISO(set.logged_at)
       if (!map.has(dateKey)) map.set(dateKey, [])
       map.get(dateKey).push(set)
     }
@@ -141,7 +142,7 @@ function History({ user, onPRUpdate }) {
                 className="flex min-h-[44px] w-full items-center justify-between px-3 py-3 text-left"
               >
                 <div>
-                  <p style={{ fontWeight: 500 }}>{new Date(dateKey).toLocaleDateString()}</p>
+                  <p style={{ fontWeight: 500 }}>{formatDateKey(dateKey)}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
                       
