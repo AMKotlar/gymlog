@@ -54,12 +54,10 @@ function Stats({ user, prVersion }) {
       }
 
       setRecords(Array.from(byExercise.values()))
-      console.log('Stats records set, count=', Array.from(byExercise.values()).length)
       setAllSets(sets ?? [])
       setLoading(false)
     }
 
-    console.log('Stats useEffect triggered, prVersion=', prVersion)
     fetchData()
   }, [user.id, prVersion])
 
