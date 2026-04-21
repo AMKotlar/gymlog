@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { effectiveReps } from '../effectiveReps'
 import { supabase } from '../supabase'
 import { formatDateKey } from '../utils/dateUtils'
@@ -93,8 +93,12 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
 
   const canLog = rir !== null
 
+  const prevExerciseId = useRef(null)
+
   useEffect(() => {
-    if (!open) return
+    if (!exercise?.id) return
+    if (exercise.id === prevExerciseId.current) return
+    prevExerciseId.current = exercise.id
     setRir(null)
     setRestActive(false)
     setRestRemaining(0)
