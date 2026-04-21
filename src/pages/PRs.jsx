@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import exercises from '../exercises.json'
 import { supabase } from '../supabase'
 import { formatDateKey } from '../utils/dateUtils'
@@ -7,6 +7,7 @@ import { formatDateKey } from '../utils/dateUtils'
 const categories = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Cardio']
 
 function PRs({ user }) {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [records, setRecords] = useState([])
   const [expanded, setExpanded] = useState(
@@ -82,9 +83,14 @@ function PRs({ user }) {
     <div style={{ padding: '16px' }}>
       <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ margin: 0, fontSize: '24px' }}>Personal Records</h1>
-        <Link to="/profile" style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
-          Profile
-        </Link>
+        <button
+          type="button"
+          onClick={() => navigate('/profile')}
+          style={{ width: '44px', height: '44px', border: 'none', borderRadius: '10px', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: '20px', cursor: 'pointer' }}
+          aria-label="Open profile"
+        >
+          ⚙
+        </button>
       </div>
 
       {loading ? (
