@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { recalculatePRForExercise } from '../components/PRRecalculator'
 import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
 import QuickStartModal from '../components/QuickStartModal'
@@ -197,8 +198,13 @@ function Home({ user }) {
   }, [user.id, exerciseByName])
 
   const deleteSet = async (setId) => {
+    const setToDelete = sets.find((s) => s.id === setId)
+    const exerciseName = setToDelete?.exercise_name
     setSets((current) => current.filter((set) => set.id !== setId))
     await supabase.from('sets').delete().eq('id', setId)
+    if (exerciseName) {
+      await recalculatePRForExercise(user.id, exerciseName)
+    }
   }
 
   const volume = useMemo(

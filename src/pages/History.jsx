@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { recalculatePRForExercise } from '../components/PRRecalculator'
 import Skeleton from '../components/Skeleton'
 import { supabase } from '../supabase'
 
@@ -71,8 +72,13 @@ function History({ user }) {
   }
 
   const deleteSet = async (setId) => {
+    const setToDelete = sets.find((s) => s.id === setId)
+    const exerciseName = setToDelete?.exercise_name
     setSets((current) => current.filter((item) => item.id !== setId))
     await supabase.from('sets').delete().eq('id', setId)
+    if (exerciseName) {
+      await recalculatePRForExercise(user.id, exerciseName)
+    }
   }
 
   const grouped = useMemo(() => {
