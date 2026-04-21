@@ -113,8 +113,8 @@ function Home({ user, onPRUpdate }) {
     return map
   }, [])
 
-  const fetchTodaySets = async () => {
-    setLoading(true)
+  const fetchTodaySets = async (showLoader = true) => {
+    if (showLoader) setLoading(true)
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
     const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
     const { data } = await supabase
@@ -125,7 +125,7 @@ function Home({ user, onPRUpdate }) {
       .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false })
     setSets(data ?? [])
-    setLoading(false)
+    if (showLoader) setLoading(false)
   }
 
   useEffect(() => {
@@ -505,7 +505,7 @@ function Home({ user, onPRUpdate }) {
         exercise={exercise}
         onClose={() => setExercise(null)}
         onLogged={() => {
-          fetchTodaySets()
+          fetchTodaySets(false)
         }}
       />
 
