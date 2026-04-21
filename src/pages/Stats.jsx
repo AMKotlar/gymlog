@@ -132,13 +132,47 @@ function Stats({ user, prVersion }) {
           ))}
         </div>
       ) : records.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
-          <p style={{ fontFamily: "'IBM Plex Mono', monospace", color: 'var(--accent)', fontSize: '16px', marginBottom: '8px' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '60px 20px',
+          textAlign: 'center',
+        }}>
+          <svg
+            width="80"
+            height="60"
+            viewBox="0 0 80 60"
+            fill="none"
+            style={{ marginBottom: '24px', opacity: 0.4 }}
+          >
+            <rect x="4" y="40" width="14" height="16" rx="2" fill="#CCFF00" />
+            <rect x="24" y="24" width="14" height="32" rx="2" fill="#CCFF00" />
+            <rect x="44" y="12" width="14" height="44" rx="2" fill="#CCFF00" />
+            <rect x="64" y="30" width="14" height="26" rx="2" fill="#CCFF00" />
+            <line x1="0" y1="58" x2="80" y2="58" stroke="#CCFF00" strokeWidth="1.5" opacity="0.3" />
+          </svg>
+
+          <p style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: '18px',
+            fontWeight: 700,
+            color: 'var(--accent)',
+            marginBottom: '8px',
+            letterSpacing: '0.05em',
+          }}>
             NO DATA YET
           </p>
-          <p style={{ fontFamily: "'Barlow', sans-serif", color: 'var(--text-muted)', fontSize: '14px' }}>
-            Log your first sets to start tracking progress
+
+          <p style={{
+            fontFamily: "'Barlow', sans-serif",
+            fontSize: '14px',
+            color: 'var(--text-muted)',
+            maxWidth: '240px',
+            lineHeight: '1.6',
+          }}>
+            Log your first sets to start tracking PRs and strength progress
           </p>
         </div>
       ) : (
