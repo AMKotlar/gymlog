@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
 import QuickStartModal from '../components/QuickStartModal'
+import { effectiveRepsChange, totalEffectiveReps } from '../effectiveReps'
 import allExercises from '../exercises.json'
 import { supabase } from '../supabase'
 
@@ -32,8 +33,18 @@ const PUSH_PULL_LEGS_ROTATION = ['PUSH', 'PULL', 'LEGS']
 const UPPER_LOWER_ROTATION = ['UPPER', 'LOWER', 'UPPER', 'LOWER']
 
 function localDayStartUTC(dateValue) {
-  const date = new Date(dateValue)
+  const date = dateValue ? new Date(dateValue) : new Date()
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).toISOString()
+}
+
+function localDateKeyFromISO(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function inferSessionTypeFromCategories(categories) {
@@ -88,6 +99,8 @@ function Home({ user }) {
   const [daysSinceLastSession, setDaysSinceLastSession] = useState(0)
   const [quickStartExercises, setQuickStartExercises] = useState([])
   const [showQuickStartModal, setShowQuickStartModal] = useState(false)
+  const [congratsEffReps, setCongratsEffReps] = useState(0)
+  const [congratsChange, setCongratsChange] = useState(null)
 
   const exerciseByName = useMemo(() => {
     const map = new Map()
@@ -226,6 +239,29 @@ function Home({ user }) {
   const handleDoneForToday = async () => {
     setSaving(true)
     try {
+      const prevSessionStart = localDayStartUTC(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+      const { data: prevSets } = await supabase
+        .from('sets')
+        .select('reps, rir, logged_at')
+        .eq('user_id', user.id)
+        .lt('logged_at', localDayStartUTC())
+        .gte('logged_at', prevSessionStart)
+        .order('logged_at', { ascending: false })
+
+      const prevSessionSets = []
+      let prevDate = null
+      for (const set of prevSets ?? []) {
+        const dateKey = localDateKeyFromISO(set.logged_at)
+        if (!prevDate) prevDate = dateKey
+        if (dateKey !== prevDate) break
+        prevSessionSets.push(set)
+      }
+
+      const currentEffReps = totalEffectiveReps(sets)
+      const changePercent = effectiveRepsChange(sets, prevSessionSets)
+      setCongratsEffReps(currentEffReps)
+      setCongratsChange(changePercent)
+
       let { error } = await supabase.from('sessions').insert({
         user_id: user.id,
         date: new Date().toISOString().split('T')[0],
@@ -459,28 +495,83 @@ function Home({ user }) {
           }}
         >
           <div style={{ width: '100%', maxWidth: '430px', textAlign: 'center' }}>
-            <div style={{ fontSize: '54px' }}>🏁</div>
-            <h2 style={{ margin: '14px 0 10px 0', color: 'white', fontSize: '30px' }}>Great workout!</h2>
-            <p style={{ margin: '0 0 6px 0', color: 'rgba(255,255,255,0.75)', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>
-              Total volume: {volume.toFixed(1)} kg
-            </p>
-            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', fontSize: '16px', fontFamily: "'IBM Plex Mono', monospace" }}>Sets logged: {sets.length}</p>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>
+              {congratsEffReps >= 30 ? '🔥' : congratsEffReps >= 15 ? '💪' : '✅'}
+            </div>
+            <h2
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '26px',
+                color: 'white',
+                marginBottom: '20px',
+              }}
+            >
+              WORKOUT COMPLETE
+            </h2>
+            <div
+              style={{
+                background: 'var(--bg-card)',
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+                marginBottom: '20px',
+                width: '100%',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '12px' }}>
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Total Volume</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '15px', color: 'white' }}>{volume.toFixed(0)} kg</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '12px' }}>
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sets Logged</span>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '15px', color: 'white' }}>{sets.length}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: "'Barlow', sans-serif", fontSize: '13px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Effective Reps</span>
+                <div style={{ textAlign: 'right' }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '22px', fontWeight: 700, color: 'var(--accent)' }}>
+                    {congratsEffReps}
+                  </span>
+                  {congratsChange !== null ? (
+                    <span
+                      style={{
+                        fontFamily: "'Barlow', sans-serif",
+                        fontSize: '12px',
+                        color: congratsChange >= 0 ? '#00ff88' : 'var(--danger)',
+                        marginLeft: '8px',
+                      }}
+                    >
+                      {congratsChange >= 0 ? `+${congratsChange}%` : `${congratsChange}%`} vs last session
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+            {congratsChange !== null ? (
+              <p style={{ fontFamily: "'Barlow', sans-serif", fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', textAlign: 'center' }}>
+                {congratsChange > 0
+                  ? `${congratsChange}% more growth stimulus than last session 🔥`
+                  : congratsChange === 0
+                    ? 'Same growth stimulus as last session — push harder next time'
+                    : 'Less stimulus than last session — were you fatigued?'}
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={() => setShowCongrats(false)}
               style={{
-                marginTop: '18px',
                 width: '100%',
                 height: '48px',
-                borderRadius: '12px',
+                borderRadius: 'var(--radius)',
                 border: 'none',
                 background: 'var(--accent)',
-                color: '#000000',
-                fontSize: '16px',
+                color: '#000',
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '15px',
+                fontWeight: 700,
                 cursor: 'pointer',
               }}
             >
-              Close
+              CLOSE
             </button>
           </div>
         </div>

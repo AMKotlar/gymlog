@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { totalEffectiveReps } from '../effectiveReps'
 import exercises from '../exercises.json'
 import { supabase } from '../supabase'
 import { formatDateKey } from '../utils/dateUtils'
@@ -8,6 +9,7 @@ const categories = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Cardi
 function PRs({ user }) {
   const [loading, setLoading] = useState(true)
   const [records, setRecords] = useState([])
+  const [allSets, setAllSets] = useState([])
   const [expanded, setExpanded] = useState(
     categories.reduce((acc, item) => ({ ...acc, [item]: true }), {}),
   )
@@ -15,7 +17,7 @@ function PRs({ user }) {
   useEffect(() => {
     const fetchRecords = async () => {
       setLoading(true)
-      const [{ data: prData }, { data: setsData }] = await Promise.all([
+      const [{ data: prData }, { data: setsData }, { data: allSetsData }] = await Promise.all([
         supabase
           .from('personal_records')
           .select('*')
@@ -27,6 +29,10 @@ function PRs({ user }) {
           .eq('user_id', user.id)
           .order('logged_at', { ascending: false })
           .limit(200),
+        supabase
+          .from('sets')
+          .select('reps, rir, exercise_name')
+          .eq('user_id', user.id),
       ])
 
       const categoryByExercise = new Map()
@@ -62,6 +68,7 @@ function PRs({ user }) {
       }
 
       setRecords(Array.from(byExercise.values()))
+      setAllSets(allSetsData ?? [])
       setLoading(false)
     }
 
@@ -114,16 +121,35 @@ function PRs({ user }) {
                   <div style={{ borderTop: '1px solid var(--border)', padding: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {entries.map((row) => (
                       <div key={row.exerciseName} style={{ borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-base)', padding: '10px' }}>
-                        <p style={{ margin: '0 0 6px 0', color: 'white', fontSize: '14px', fontWeight: 500 }}>{row.exerciseName}</p>
-                        <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
-                          🏆 Best weight: {row.weightPR ?? '-'} kg
-                        </p>
-                        <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
-                          📦 Best set: {row.volumePR ?? '-'} kg
-                        </p>
-                        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>
-                          Date achieved: {formatDateKey(row.achievedAt)}
-                        </p>
+                        {(() => {
+                          const exerciseSets = allSets.filter((s) => s.exercise_name === row.exerciseName)
+                          const totalEffReps = totalEffectiveReps(exerciseSets)
+                          return (
+                            <>
+                              <p style={{ margin: '0 0 6px 0', color: 'white', fontSize: '14px', fontWeight: 500 }}>{row.exerciseName}</p>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
+                                🏆 Best weight: {row.weightPR ?? '-'} kg
+                              </p>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--accent)', fontSize: '13px', fontFamily: "'IBM Plex Mono', monospace" }}>
+                                📦 Best set: {row.volumePR ?? '-'} kg
+                              </p>
+                              <p style={{ margin: '0 0 4px 0', color: 'var(--text-muted)', fontSize: '12px' }}>
+                                Date achieved: {formatDateKey(row.achievedAt)}
+                              </p>
+                              <p
+                                style={{
+                                  fontFamily: "'Barlow', sans-serif",
+                                  fontSize: '12px',
+                                  color: 'var(--text-muted)',
+                                  marginTop: '6px',
+                                  marginBottom: 0,
+                                }}
+                              >
+                                {totalEffReps} effective reps logged lifetime
+                              </p>
+                            </>
+                          )
+                        })()}
                       </div>
                     ))}
                   </div>

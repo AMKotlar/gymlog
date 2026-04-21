@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { effectiveReps } from '../effectiveReps'
 import { supabase } from '../supabase'
 import { formatDateKey } from '../utils/dateUtils'
 import PRCelebration from './PRCelebration'
@@ -446,6 +447,58 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             </button>
           ))}
         </div>
+
+        {rir !== null ? (
+          <div
+            style={{
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '12px 16px',
+              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'Barlow', sans-serif",
+                fontSize: '13px',
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              Effective Reps This Set
+            </span>
+            <span
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '20px',
+                fontWeight: 700,
+                color: effectiveReps(reps, rir) > 0 ? 'var(--accent)' : 'var(--text-muted)',
+              }}
+            >
+              {effectiveReps(reps, rir)}
+            </span>
+          </div>
+        ) : null}
+
+        {rir !== null && effectiveReps(reps, rir) === 0 ? (
+          <p
+            style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontSize: '12px',
+              color: 'var(--text-muted)',
+              textAlign: 'center',
+              marginTop: '-10px',
+              marginBottom: '12px',
+            }}
+          >
+            Too far from failure - no growth stimulus yet
+          </p>
+        ) : null}
 
         <div className="mb-5 grid grid-cols-4 gap-2">
           {rests.map((item) => (
