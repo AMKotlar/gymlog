@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Skeleton from '../components/Skeleton'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabase'
 
@@ -24,6 +25,7 @@ function Profile({ user }) {
   const [errorMessage, setErrorMessage] = useState('')
   const [hasPersonalData, setHasPersonalData] = useState(false)
   const [isEditingPersonal, setIsEditingPersonal] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   const fetchProfile = async () => {
     if (!user?.id) return
@@ -55,8 +57,12 @@ function Profile({ user }) {
   }
 
   useEffect(() => {
-    fetchProfile()
-    fetchWeightHistory()
+    const fetchAll = async () => {
+      setLoading(true)
+      await Promise.all([fetchProfile(), fetchWeightHistory()])
+      setLoading(false)
+    }
+    fetchAll()
   }, [user?.id])
 
   const saveProfile = async () => {
@@ -126,6 +132,36 @@ function Profile({ user }) {
 
   return (
     <div style={{ padding: '16px' }}>
+      {loading ? (
+        <div style={{ padding: '16px' }}>
+          <Skeleton width="100px" height="28px" style={{ marginBottom: '24px' }} />
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '16px',
+              marginBottom: '14px',
+            }}
+          >
+            <Skeleton width="60px" height="11px" style={{ marginBottom: '6px' }} />
+            <Skeleton width="180px" height="14px" />
+          </div>
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              padding: '16px',
+            }}
+          >
+            <Skeleton width="120px" height="15px" style={{ marginBottom: '12px' }} />
+            <Skeleton width="100%" height="44px" borderRadius="10px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="100%" height="44px" borderRadius="10px" />
+          </div>
+        </div>
+      ) : (
+        <>
       <h1 style={{ marginBottom: '24px', fontSize: '24px' }}>Profile</h1>
       <div style={{ borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
@@ -244,7 +280,8 @@ function Profile({ user }) {
           {errorMessage}
         </p>
       ) : null}
-
+        </>
+      )}
     </div>
   )
 }

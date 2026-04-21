@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Skeleton from '../components/Skeleton'
 import StrengthChart from '../components/StrengthChart'
 import { totalEffectiveReps } from '../effectiveReps'
 import allExercises from '../exercises.json'
@@ -110,18 +111,24 @@ function Stats({ user }) {
       </p>
 
       {loading ? (
-        <div style={{ display: 'grid', gap: '10px' }}>
+        <div style={{ padding: '16px' }}>
+          <Skeleton width="80px" height="28px" style={{ marginBottom: '24px' }} />
+          <Skeleton width="140px" height="11px" style={{ marginBottom: '12px' }} />
           {[1, 2, 3].map((i) => (
             <div
               key={i}
               style={{
-                height: '80px',
-                borderRadius: 'var(--radius)',
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
-                animation: 'pulse 1.5s ease-in-out infinite',
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+                marginBottom: '8px',
               }}
-            />
+            >
+              <Skeleton width="160px" height="16px" style={{ marginBottom: '10px' }} />
+              <Skeleton width="120px" height="14px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="80px" height="12px" />
+            </div>
           ))}
         </div>
       ) : records.length === 0 ? (

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import Skeleton from '../components/Skeleton'
 import { supabase } from '../supabase'
 
 function rirClass(rir) {
@@ -13,8 +14,10 @@ function History({ user }) {
   const [expandedDate, setExpandedDate] = useState('')
   const [editingSetId, setEditingSetId] = useState('')
   const [editForm, setEditForm] = useState({ weight: '', reps: '', rir: 1 })
+  const [loading, setLoading] = useState(true)
 
   const fetchHistoryData = async () => {
+    setLoading(true)
     const [setsResponse, sessionsResponse] = await Promise.all([
       supabase
         .from('sets')
@@ -30,6 +33,7 @@ function History({ user }) {
 
     setSets(setsResponse.data ?? [])
     setSessions(sessionsResponse.data ?? [])
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -83,6 +87,27 @@ function History({ user }) {
 
   return (
     <div className="p-4">
+      {loading ? (
+        <div style={{ padding: '16px' }}>
+          <Skeleton width="120px" height="28px" style={{ marginBottom: '16px' }} />
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                padding: '14px',
+                marginBottom: '8px',
+              }}
+            >
+              <Skeleton width="100px" height="14px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="160px" height="12px" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
       <h1 className="mb-4 text-2xl">History</h1>
       <div className="space-y-2">
         {grouped.map(([dateKey, dateSets]) => {
@@ -216,6 +241,8 @@ function History({ user }) {
           )
         })}
       </div>
+        </>
+      )}
     </div>
   )
 }

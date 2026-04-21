@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
 import QuickStartModal from '../components/QuickStartModal'
+import Skeleton from '../components/Skeleton'
 import { effectiveRepsChange, totalEffectiveReps } from '../effectiveReps'
 import allExercises from '../exercises.json'
 import { supabase } from '../supabase'
@@ -101,6 +102,7 @@ function Home({ user }) {
   const [showQuickStartModal, setShowQuickStartModal] = useState(false)
   const [congratsEffReps, setCongratsEffReps] = useState(0)
   const [congratsChange, setCongratsChange] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const exerciseByName = useMemo(() => {
     const map = new Map()
@@ -111,6 +113,7 @@ function Home({ user }) {
   }, [])
 
   const fetchTodaySets = async () => {
+    setLoading(true)
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
     const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
     const { data } = await supabase
@@ -121,6 +124,7 @@ function Home({ user }) {
       .lt('logged_at', tomorrowStart)
       .order('logged_at', { ascending: false })
     setSets(data ?? [])
+    setLoading(false)
   }
 
   useEffect(() => {
@@ -296,6 +300,30 @@ function Home({ user }) {
 
   return (
     <div className="px-4 pb-4 pt-4">
+      {loading ? (
+        <div style={{ padding: '16px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <Skeleton width="120px" height="12px" style={{ marginBottom: '8px' }} />
+            <Skeleton width="200px" height="28px" />
+          </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius)',
+                padding: '14px',
+                marginBottom: '8px',
+              }}
+            >
+              <Skeleton width="140px" height="14px" style={{ marginBottom: '8px' }} />
+              <Skeleton width="100px" height="12px" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
       <header className="mb-5" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -610,6 +638,8 @@ function Home({ user }) {
           </div>
         </div>
       ) : null}
+        </>
+      )}
     </div>
   )
 }

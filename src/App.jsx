@@ -48,8 +48,36 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-white" style={{ background: 'var(--bg-base)' }}>
-        Loading...
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          background: 'var(--bg-base)',
+          gap: '16px',
+        }}
+      >
+        <p
+          style={{
+            fontFamily: "'IBM Plex Mono', monospace",
+            fontSize: '28px',
+            fontWeight: 700,
+            color: 'var(--accent)',
+            letterSpacing: '0.1em',
+          }}
+        >
+          FAILR
+        </p>
+        <div
+          style={{
+            width: '40px',
+            height: '2px',
+            background: 'var(--accent)',
+            animation: 'pulse 1s ease-in-out infinite',
+          }}
+        />
       </div>
     )
   }
