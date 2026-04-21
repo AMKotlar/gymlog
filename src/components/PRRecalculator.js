@@ -1,18 +1,24 @@
 import { supabase } from '../supabase'
 
 export async function recalculatePRForExercise(userId, exerciseName) {
-  const { data: sets } = await supabase
+  console.log('PRRecalculator: running for', exerciseName, userId)
+
+  const { data: sets, error } = await supabase
     .from('sets')
     .select('weight, reps')
     .eq('user_id', userId)
     .eq('exercise_name', exerciseName)
 
+  console.log('PRRecalculator: remaining sets:', sets, 'error:', error)
+
   if (!sets || sets.length === 0) {
-    await supabase
+    console.log('PRRecalculator: no sets left, deleting PR')
+    const { error: deleteError } = await supabase
       .from('personal_records')
       .delete()
       .eq('user_id', userId)
       .eq('exercise_name', exerciseName)
+    console.log('PRRecalculator: delete error:', deleteError)
     return
   }
 
