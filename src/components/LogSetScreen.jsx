@@ -245,7 +245,6 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     })
     setSaving(false)
     if (error) return
-    onLogged()
 
     if (contractAccepted && contractTarget) {
       const contractBeaten =
@@ -311,6 +310,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       setPendingRestStart(false)
       setRestActive(true)
     }
+
+    onLogged()
   }
 
   const dismissPRAndStartRest = () => {
