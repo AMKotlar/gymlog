@@ -88,7 +88,7 @@ function getSuggestedSession(recentSessions) {
   return 'PUSH'
 }
 
-function Home({ user }) {
+function Home({ user, onPRUpdate }) {
   const [sets, setSets] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [exercise, setExercise] = useState(null)
@@ -217,6 +217,7 @@ function Home({ user }) {
 
     if (exerciseName) {
       await recalculatePRForExercise(user.id, exerciseName)
+      onPRUpdate?.()
     }
   }
 

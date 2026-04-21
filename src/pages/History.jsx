@@ -10,7 +10,7 @@ function rirClass(rir) {
   return 'bg-green-500/20 text-green-300'
 }
 
-function History({ user }) {
+function History({ user, onPRUpdate }) {
   const location = useLocation()
   const [sets, setSets] = useState([])
   const [sessions, setSessions] = useState([])
@@ -93,6 +93,7 @@ function History({ user }) {
 
     if (exerciseName) {
       await recalculatePRForExercise(user.id, exerciseName)
+      onPRUpdate?.()
     }
   }
 

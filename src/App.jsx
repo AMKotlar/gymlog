@@ -10,13 +10,13 @@ import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
 import Stats from './pages/Stats'
 
-function AppShell({ user }) {
+function AppShell({ user, onPRUpdate, prVersion }) {
   return (
     <div className="mx-auto min-h-screen w-full max-w-[430px] pb-20" style={{ background: 'var(--bg-base)' }}>
       <Routes>
-        <Route path="/" element={<Home user={user} />} />
-        <Route path="/history" element={<History user={user} />} />
-        <Route path="/stats" element={<Stats user={user} />} />
+        <Route path="/" element={<Home user={user} onPRUpdate={onPRUpdate} />} />
+        <Route path="/history" element={<History user={user} onPRUpdate={onPRUpdate} />} />
+        <Route path="/stats" element={<Stats user={user} prVersion={prVersion} />} />
         <Route path="/prs" element={<Navigate to="/stats" replace />} />
         <Route path="/profile" element={<Profile user={user} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -30,6 +30,8 @@ function AppShell({ user }) {
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [prVersion, setPrVersion] = useState(0)
+  const onPRUpdate = () => setPrVersion((v) => v + 1)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -96,7 +98,7 @@ function App() {
         <Route
           path="/*"
           element={
-            session ? <AppShell user={session.user} /> : <Navigate to="/signin" replace />
+            session ? <AppShell user={session.user} onPRUpdate={onPRUpdate} prVersion={prVersion} /> : <Navigate to="/signin" replace />
           }
         />
       </Routes>

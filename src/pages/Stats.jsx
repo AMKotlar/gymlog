@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import Skeleton from '../components/Skeleton'
 import StrengthChart from '../components/StrengthChart'
 import { totalEffectiveReps } from '../effectiveReps'
@@ -7,8 +6,7 @@ import allExercises from '../exercises.json'
 import { supabase } from '../supabase'
 import { formatDateKey } from '../utils/dateUtils'
 
-function Stats({ user }) {
-  const location = useLocation()
+function Stats({ user, prVersion }) {
   const [loading, setLoading] = useState(true)
   const [records, setRecords] = useState([])
   const [allSets, setAllSets] = useState([])
@@ -61,7 +59,7 @@ function Stats({ user }) {
     }
 
     fetchData()
-  }, [user.id, location.key])
+  }, [user.id, prVersion])
 
   const exerciseLifetimeEffReps = useMemo(() => {
     const map = new Map()
