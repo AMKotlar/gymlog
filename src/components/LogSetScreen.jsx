@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabase'
+import { formatDateKey } from '../utils/dateUtils'
 import PRCelebration from './PRCelebration'
 import RestTimer from './RestTimer'
 import ScrollWheel from './ScrollWheel'
@@ -45,10 +46,26 @@ function formatWeight(value) {
   return value % 1 === 0 ? `${value}` : value.toFixed(1)
 }
 
-function formatLastSet(lastSet) {
-  if (!lastSet) return 'First set today'
-  const rirText = lastSet.rir === 0 ? '0' : lastSet.rir === 1 ? '1-2' : '3+'
-  return `Last: ${formatWeight(lastSet.weight)} kg × ${lastSet.reps} · RIR ${rirText}`
+function localDayStartUTC() {
+  const now = new Date()
+  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return localMidnight.toISOString()
+}
+
+function localDateKeyFromISO(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function rirBadgeStyle(rir) {
+  if (rir === 0) return { background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }
+  if (rir === 1) return { background: 'rgba(245,158,11,0.2)', color: '#fcd34d' }
+  return { background: 'rgba(34,197,94,0.2)', color: '#86efac' }
 }
 
 function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
@@ -64,6 +81,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [pendingRestStart, setPendingRestStart] = useState(false)
   const [setCountToday, setSetCountToday] = useState(0)
   const [lastSet, setLastSet] = useState(null)
+  const [lastSessionSets, setLastSessionSets] = useState([])
   const [saving, setSaving] = useState(false)
 
   const canLog = rir !== null
@@ -83,29 +101,46 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     const todayStart = `${new Date().toISOString().split('T')[0]}T00:00:00.000Z`
     const tomorrowStart = `${new Date(Date.now() + 86400000).toISOString().split('T')[0]}T00:00:00.000Z`
 
-    supabase
-      .from('sets')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('exercise_name', exercise.name)
-      .gte('logged_at', todayStart)
-      .lt('logged_at', tomorrowStart)
-      .order('logged_at', { ascending: false })
-      .then(({ data }) => {
-        const entries = data ?? []
-        setSetCountToday(entries.length)
-        if (entries[0]) {
-          setLastSet(entries[0])
-          setWeight(entries[0].weight)
-          setReps(entries[0].reps)
-          setRestSeconds(entries[0].rest_seconds ?? 90)
-        } else {
-          setLastSet(null)
-          setWeight(20)
-          setReps(8)
-          setRestSeconds(90)
-        }
-      })
+    Promise.all([
+      supabase
+        .from('sets')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('exercise_name', exercise.name)
+        .gte('logged_at', todayStart)
+        .lt('logged_at', tomorrowStart)
+        .order('logged_at', { ascending: false }),
+      supabase
+        .from('sets')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('exercise_name', exercise.name)
+        .lt('logged_at', localDayStartUTC())
+        .order('logged_at', { ascending: false })
+        .limit(5),
+    ]).then(([todayResponse, lastSessionResponse]) => {
+      const entries = todayResponse.data ?? []
+      const previous = lastSessionResponse.data ?? []
+
+      setSetCountToday(entries.length)
+      setLastSessionSets(previous)
+      if (entries[0]) {
+        setLastSet(entries[0])
+        setWeight(entries[0].weight)
+        setReps(entries[0].reps)
+        setRestSeconds(entries[0].rest_seconds ?? 90)
+      } else if (previous[0]) {
+        setLastSet(null)
+        setWeight(previous[0].weight ?? 20)
+        setReps(previous[0].reps ?? 8)
+        setRestSeconds(previous[0].rest_seconds ?? 90)
+      } else {
+        setLastSet(null)
+        setWeight(20)
+        setReps(8)
+        setRestSeconds(90)
+      }
+    })
   }, [open, userId, exercise?.id, exercise?.name])
 
   const volume = useMemo(() => Number((weight * reps).toFixed(2)), [weight, reps])
@@ -247,12 +282,46 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             <div className="mt-1 inline-flex rounded-full bg-white/10 px-3 py-1 text-xs">
               Set {setCountToday + 1}
             </div>
-            <p className="mt-2 text-sm text-white/60">{formatLastSet(lastSet)}</p>
           </div>
           <button type="button" className="h-11 min-w-[44px] text-2xl" onClick={onClose}>
             ×
           </button>
         </div>
+
+        {lastSessionSets.length > 0 ? (
+          <div
+            style={{
+              marginBottom: '12px',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#17172a',
+              padding: '10px',
+            }}
+          >
+            <p style={{ margin: 0, marginBottom: '8px', color: 'rgba(255,255,255,0.75)', fontSize: '13px' }}>
+              Last session — {formatDateKey(localDateKeyFromISO(lastSessionSets[0].logged_at))}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {lastSessionSets.slice(0, 5).map((item) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+                    {formatWeight(item.weight)} kg × {item.reps}
+                  </span>
+                  <span
+                    style={{
+                      ...rirBadgeStyle(item.rir),
+                      borderRadius: '999px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                    }}
+                  >
+                    RIR {item.rir === 0 ? '0' : item.rir === 1 ? '1-2' : '3+'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className="mb-2 flex items-center gap-3">
           <div className="flex-1">
