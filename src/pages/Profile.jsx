@@ -126,17 +126,7 @@ function Profile({ user }) {
 
   return (
     <div style={{ padding: '16px' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <button
-          type="button"
-          onClick={() => navigate('/prs')}
-          style={{ width: '44px', height: '44px', border: 'none', borderRadius: '10px', background: 'transparent', color: 'rgba(255,255,255,0.6)', fontSize: '22px', cursor: 'pointer' }}
-          aria-label="Back to personal records"
-        >
-          ←
-        </button>
-        <h1 style={{ margin: 0, fontSize: '24px' }}>Profile</h1>
-      </div>
+      <h1 style={{ marginBottom: '24px', fontSize: '24px' }}>Profile</h1>
       <div style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: '#17172a', padding: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div>
