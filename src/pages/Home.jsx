@@ -215,6 +215,7 @@ function Home({ user, onPRUpdate }) {
     if (exerciseName) {
       await recalculatePRForExercise(user.id, exerciseName, remainingForExercise)
       onPRUpdate?.()
+      console.log('onPRUpdate called from Home')
     }
   }
 
