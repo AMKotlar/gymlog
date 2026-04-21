@@ -31,6 +31,12 @@ function SignIn() {
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-[430px] flex-col justify-center px-5 text-white" style={{ background: 'var(--bg-base)' }}>
+      <div className="mb-6">
+        <h1 style={{ margin: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: '32px', fontWeight: 700, color: 'var(--accent)' }}>FAILR</h1>
+        <p style={{ margin: '6px 0 0 0', fontFamily: "'Barlow', sans-serif", fontSize: '15px', color: 'var(--text-secondary)' }}>
+          Just Fail It.
+        </p>
+      </div>
       <h1 className="mb-6 text-3xl">Sign in</h1>
       <div className="space-y-3">
         <input

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gymlog-v2'
+const CACHE_NAME = 'failr-v1'
 const APP_SHELL = ['/', '/index.html', '/manifest.json']
 
 self.addEventListener('install', (event) => {

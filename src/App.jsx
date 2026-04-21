@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { supabase } from './supabase'
 import BottomNav from './components/BottomNav'
+import InstallPrompt from './components/InstallPrompt'
 import Home from './pages/Home'
 import History from './pages/History'
 import PRs from './pages/PRs'
@@ -20,6 +21,7 @@ function AppShell({ user }) {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />
+      <InstallPrompt />
     </div>
   )
 }
