@@ -11,6 +11,102 @@ function todayKey() {
   return `${year}-${month}-${day}`
 }
 
+function WeightChart({ data }) {
+  if (!data || data.length < 2) {
+    return (
+      <p
+        style={{
+          fontFamily: "'Barlow', sans-serif",
+          fontSize: '13px',
+          color: 'var(--text-muted)',
+          textAlign: 'center',
+          padding: '20px 0',
+        }}
+      >
+        Log at least 2 entries to see your trend
+      </p>
+    )
+  }
+
+  const sorted = [...data].sort((a, b) => a.recorded_on.localeCompare(b.recorded_on))
+
+  const weights = sorted.map((d) => Number(d.weight_kg))
+  const minW = Math.min(...weights) - 2
+  const maxW = Math.max(...weights) + 2
+  const W = 300
+  const H = 120
+  const padL = 36
+  const padR = 12
+  const padT = 10
+  const padB = 24
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
+  const xScale = (i) => padL + (i / (sorted.length - 1)) * chartW
+  const yScale = (w) => padT + chartH - ((w - minW) / (maxW - minW)) * chartH
+  const points = sorted
+    .map((d, i) => `${xScale(i)},${yScale(Number(d.weight_kg))}`)
+    .join(' ')
+  const labelIndices = [...new Set([0, Math.floor(sorted.length / 2), sorted.length - 1])]
+  const gridWeights = [minW + 2, (minW + maxW) / 2, maxW - 2]
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: 'block', marginTop: '8px' }}>
+      {gridWeights.map((w, i) => (
+        <g key={i}>
+          <line
+            x1={padL}
+            y1={yScale(w)}
+            x2={W - padR}
+            y2={yScale(w)}
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth="1"
+          />
+          <text
+            x={padL - 4}
+            y={yScale(w) + 4}
+            textAnchor="end"
+            fontFamily="'IBM Plex Mono', monospace"
+            fontSize="9"
+            fill="rgba(255,255,255,0.3)"
+          >
+            {Math.round(w)}
+          </text>
+        </g>
+      ))}
+      <polyline
+        points={points}
+        fill="none"
+        stroke="#CCFF00"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {sorted.map((d, i) => (
+        <circle
+          key={i}
+          cx={xScale(i)}
+          cy={yScale(Number(d.weight_kg))}
+          r={i === sorted.length - 1 ? 4 : 2.5}
+          fill="#CCFF00"
+        />
+      ))}
+      {labelIndices.map((i) => (
+        <text
+          key={i}
+          x={xScale(i)}
+          y={H - 4}
+          textAnchor="middle"
+          fontFamily="'Barlow', sans-serif"
+          fontSize="9"
+          fill="rgba(255,255,255,0.35)"
+        >
+          {sorted[i].recorded_on.slice(5).replace('-', ' ')}
+        </text>
+      ))}
+    </svg>
+  )
+}
+
 function Profile({ user }) {
   const navigate = useNavigate()
   const [birthYear, setBirthYear] = useState('')
@@ -262,22 +358,10 @@ function Profile({ user }) {
           {weightSaved ? <p style={{ margin: 0, fontSize: '13px', color: '#86efac' }}>Weight saved ✓</p> : null}
         </div>
 
-        <p style={{ margin: 0, marginBottom: '10px', fontSize: '15px' }}>Weight history</p>
-        {weightHistory.length === 0 ? (
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>No entries yet.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {weightHistory.map((item) => (
-              <div
-                key={`${item.id}-${item.recorded_on}`}
-                style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '6px' }}
-              >
-                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>{item.recorded_on}</span>
-                <span style={{ color: 'white', fontSize: '13px' }}>{item.weight_kg} kg</span>
-              </div>
-            ))}
-          </div>
-        )}
+        <div style={{ marginTop: '14px', borderRadius: '12px', border: '1px solid var(--border)', background: 'var(--bg-card)', padding: '16px' }}>
+          <p style={{ margin: '0 0 4px 0', fontSize: '15px' }}>Weight trend</p>
+          <WeightChart data={weightHistory} />
+        </div>
       </div>
 
       {errorMessage ? (
