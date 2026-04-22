@@ -102,11 +102,16 @@ function Profile({ user }) {
     }
     setErrorMessage('')
     setSavingWeight(true)
-    const { error } = await supabase.from('weight_history').insert({
-      user_id: user.id,
-      weight_kg: Number(weightKg),
-      recorded_on: weightDate || todayKey(),
-    })
+    const { error } = await supabase
+      .from('weight_history')
+      .upsert(
+        {
+          user_id: user.id,
+          weight_kg: Number(weightKg),
+          recorded_on: weightDate || todayKey(),
+        },
+        { onConflict: 'user_id,recorded_on' }
+      )
     setSavingWeight(false)
 
     if (error) {
