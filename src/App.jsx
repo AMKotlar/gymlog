@@ -5,6 +5,7 @@ import BottomNav from './components/BottomNav'
 import InstallPrompt from './components/InstallPrompt'
 import Home from './pages/Home'
 import History from './pages/History'
+import Onboarding from './pages/Onboarding'
 import Profile from './pages/Profile'
 import SignIn from './pages/SignIn'
 import SignUp from './pages/SignUp'
@@ -30,6 +31,7 @@ function AppShell({ user, onPRUpdate, prVersion }) {
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [onboardingDone, setOnboardingDone] = useState(null)
   const [prVersion, setPrVersion] = useState(0)
   const onPRUpdate = () => setPrVersion((v) => v + 1)
 
@@ -47,6 +49,18 @@ function App() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    if (!session?.user?.id) return
+    supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setOnboardingDone(data?.onboarding_completed ?? false)
+      })
+  }, [session?.user?.id])
 
   if (loading) {
     return (
@@ -98,7 +112,15 @@ function App() {
         <Route
           path="/*"
           element={
-            session ? <AppShell user={session.user} onPRUpdate={onPRUpdate} prVersion={prVersion} /> : <Navigate to="/signin" replace />
+            session ? (
+              onboardingDone === null ? null : onboardingDone === false ? (
+                <Onboarding userId={session.user.id} onComplete={() => setOnboardingDone(true)} />
+              ) : (
+                <AppShell user={session.user} onPRUpdate={onPRUpdate} prVersion={prVersion} />
+              )
+            ) : (
+              <Navigate to="/signin" replace />
+            )
           }
         />
       </Routes>
