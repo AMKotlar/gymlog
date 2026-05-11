@@ -44,6 +44,16 @@ const rests = [
   { label: '3 min', seconds: 180 },
 ]
 
+const LS_TIMER_START = 'timerStartedAt'
+const LS_TIMER_DURATION = 'timerDuration'
+const LS_TIMER_EXERCISE = 'timerExerciseName'
+
+function clearRestTimerLocalStorage() {
+  localStorage.removeItem(LS_TIMER_START)
+  localStorage.removeItem(LS_TIMER_DURATION)
+  localStorage.removeItem(LS_TIMER_EXERCISE)
+}
+
 function formatWeight(value) {
   return value % 1 === 0 ? `${value}` : value.toFixed(1)
 }
@@ -62,6 +72,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [restActive, setRestActive] = useState(false)
   const [restRemaining, setRestRemaining] = useState(0)
   const [restTotal, setRestTotal] = useState(90)
+  const [restTimerStartedAt, setRestTimerStartedAt] = useState(null)
+  const [restTimerExerciseName, setRestTimerExerciseName] = useState(null)
   const [restCompleteMessage, setRestCompleteMessage] = useState(false)
   const [newPRs, setNewPRs] = useState([])
   const [pendingRestStart, setPendingRestStart] = useState(false)
@@ -86,6 +98,9 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setRir(null)
     setRestActive(false)
     setRestRemaining(0)
+    setRestTimerStartedAt(null)
+    setRestTimerExerciseName(null)
+    clearRestTimerLocalStorage()
     setRestCompleteMessage(false)
     setNewPRs([])
     setPendingRestStart(false)
@@ -157,12 +172,64 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const volume = useMemo(() => Number((weight * reps).toFixed(2)), [weight, reps])
 
   useEffect(() => {
-    if (!restActive || restRemaining <= 0) return
+    if (!open || !exercise?.name) return
+    const savedStart = localStorage.getItem(LS_TIMER_START)
+    const savedDuration = localStorage.getItem(LS_TIMER_DURATION)
+    const savedExercise = localStorage.getItem(LS_TIMER_EXERCISE)
+    if (!savedStart || !savedDuration) return
+    if (savedExercise && savedExercise !== exercise.name) return
+    const start = Number(savedStart)
+    const duration = Number(savedDuration)
+    if (!Number.isFinite(start) || !Number.isFinite(duration)) return
+    const elapsed = Math.floor((Date.now() - start) / 1000)
+    const remaining = duration - elapsed
+    if (remaining > 0) {
+      setRestTimerStartedAt(start)
+      setRestTotal(duration)
+      setRestRemaining(remaining)
+      setRestTimerExerciseName(savedExercise || exercise.name)
+      setRestActive(true)
+      setRestCompleteMessage(false)
+    } else {
+      clearRestTimerLocalStorage()
+    }
+  }, [open, exercise?.name])
+
+  useEffect(() => {
+    if (!restTimerStartedAt) return
+
     const interval = setInterval(() => {
-      setRestRemaining((prev) => Math.max(0, prev - 1))
-    }, 1000)
+      const elapsed = Math.floor((Date.now() - restTimerStartedAt) / 1000)
+      const remaining = restTotal - elapsed
+      if (remaining <= 0) {
+        setRestRemaining(0)
+        setRestTimerStartedAt(null)
+        clearRestTimerLocalStorage()
+        clearInterval(interval)
+      } else {
+        setRestRemaining(remaining)
+      }
+    }, 500)
+
     return () => clearInterval(interval)
-  }, [restActive, restRemaining])
+  }, [restTimerStartedAt, restTotal])
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState !== 'visible' || !restTimerStartedAt) return
+      const elapsed = Math.floor((Date.now() - restTimerStartedAt) / 1000)
+      const remaining = restTotal - elapsed
+      if (remaining <= 0) {
+        setRestRemaining(0)
+        setRestTimerStartedAt(null)
+        clearRestTimerLocalStorage()
+      } else {
+        setRestRemaining(remaining)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [restTimerStartedAt, restTotal])
 
   useEffect(() => {
     if (!restActive || restRemaining !== 0) return
@@ -191,16 +258,33 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     const timeout = setTimeout(() => {
       setRestActive(false)
       setRestCompleteMessage(false)
+      setRestTimerExerciseName(null)
     }, 1500)
     return () => clearTimeout(timeout)
   }, [restActive, restRemaining])
 
+  const startRestTimer = (durationSeconds) => {
+    const now = Date.now()
+    const name = exercise?.name || restTimerExerciseName || ''
+    setRestTimerStartedAt(now)
+    setRestTotal(durationSeconds)
+    setRestRemaining(durationSeconds)
+    setRestCompleteMessage(false)
+    localStorage.setItem(LS_TIMER_START, String(now))
+    localStorage.setItem(LS_TIMER_DURATION, String(durationSeconds))
+    if (name) {
+      localStorage.setItem(LS_TIMER_EXERCISE, name)
+      setRestTimerExerciseName(name)
+    } else {
+      localStorage.removeItem(LS_TIMER_EXERCISE)
+      setRestTimerExerciseName(null)
+    }
+  }
+
   const resetRestTimer = (seconds) => {
     setRestSeconds(seconds)
     if (restActive) {
-      setRestTotal(seconds)
-      setRestRemaining(seconds)
-      setRestCompleteMessage(false)
+      startRestTimer(seconds)
     }
   }
 
@@ -299,14 +383,13 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     if (isWeightPR) achieved.push('weight')
     if (isVolumePR) achieved.push('volume')
 
-    setRestTotal(restSeconds)
-    setRestRemaining(restSeconds)
     setRestCompleteMessage(false)
     if (achieved.length > 0) {
       setPendingRestStart(true)
       setNewPRs(achieved)
     } else {
       setPendingRestStart(false)
+      startRestTimer(restSeconds)
       setRestActive(true)
     }
 
@@ -317,13 +400,16 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setNewPRs([])
     if (pendingRestStart) {
       setPendingRestStart(false)
+      startRestTimer(restSeconds)
       setRestActive(true)
     }
   }
 
-  if (!open || !exercise) return null
+  const showMain = open && exercise
 
   return (
+    <>
+    {showMain ? (
     <div className="fixed inset-0 z-50" style={{ background: 'var(--bg-base)' }}>
       <div className="mx-auto h-full w-full max-w-[430px] overflow-y-auto p-4 pb-6">
         <div className="mb-4 flex items-start justify-between">
@@ -532,9 +618,11 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           {saving ? 'Logging...' : 'Log set'}
         </button>
       </div>
+    </div>
+    ) : null}
       <RestTimer
         open={restActive}
-        exerciseName={exercise.name}
+        exerciseName={restTimerExerciseName || exercise?.name || 'Rest'}
         remaining={restRemaining}
         total={restTotal}
         restOptions={rests}
@@ -543,9 +631,14 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         onSkip={() => {
           setRestActive(false)
           setRestCompleteMessage(false)
+          setRestTimerStartedAt(null)
+          setRestTimerExerciseName(null)
+          clearRestTimerLocalStorage()
         }}
         completeMessage={restCompleteMessage}
       />
+      {showMain ? (
+        <>
       <PRCelebration
         open={newPRs.length > 0}
         exerciseName={exercise.name}
@@ -566,7 +659,9 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
         onAccept={acceptContract}
         onSkip={skipContract}
       />
-    </div>
+        </>
+      ) : null}
+    </>
   )
 }
 
