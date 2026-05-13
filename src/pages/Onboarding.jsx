@@ -65,23 +65,90 @@ const STEP_PROGRESS = {
   10: 5,
 }
 
+const FONT_STYLESHEET_HREF =
+  'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@700;800;900&display=swap'
+
+const BRAND = {
+  background: '#080808',
+  surface: '#111111',
+  elevated: '#1a1a1a',
+  accent: '#CCFF00',
+  accentDim: 'rgba(204,255,0,0.1)',
+  accentBorder: 'rgba(204,255,0,0.3)',
+  textPrimary: '#ffffff',
+  textSecondary: 'rgba(255,255,255,0.55)',
+  textMuted: 'rgba(255,255,255,0.25)',
+  border: 'rgba(255,255,255,0.08)',
+}
+
 function formatMetricValue(value) {
   return value % 1 === 0 ? `${value}` : value.toFixed(1)
 }
 
-function baseButtonStyle(disabled) {
+function baseButtonStyle(disabled, overrides = {}) {
   return {
     width: '100%',
     minHeight: '52px',
     border: 'none',
-    borderRadius: '14px',
-    background: '#7c3aed',
-    color: 'white',
-    fontSize: '16px',
-    fontWeight: 600,
+    borderRadius: '8px',
+    background: BRAND.accent,
+    color: '#000000',
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: '14px',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.45 : 1,
     transition: 'opacity 0.2s ease',
+    ...overrides,
+  }
+}
+
+function titleStyle(fontSize) {
+  return {
+    margin: 0,
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize,
+    fontWeight: 900,
+    textTransform: 'uppercase',
+    color: BRAND.textPrimary,
+    lineHeight: 1.02,
+  }
+}
+
+function bodyTextStyle(overrides = {}) {
+  return {
+    fontFamily: "'Barlow', sans-serif",
+    color: BRAND.textSecondary,
+    ...overrides,
+  }
+}
+
+function monoLabelStyle(overrides = {}) {
+  return {
+    fontFamily: "'IBM Plex Mono', monospace",
+    color: BRAND.textMuted,
+    fontSize: '12px',
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+    ...overrides,
+  }
+}
+
+function authInputStyle(isFocused) {
+  return {
+    background: BRAND.surface,
+    border: isFocused ? '1px solid rgba(204,255,0,0.5)' : `1px solid ${BRAND.border}`,
+    borderRadius: '8px',
+    padding: '14px 16px',
+    color: BRAND.textPrimary,
+    fontFamily: "'Barlow', sans-serif",
+    fontSize: '16px',
+    outline: 'none',
+    width: '100%',
+    boxSizing: 'border-box',
+    transition: 'border-color 0.2s ease',
   }
 }
 
@@ -103,6 +170,7 @@ function Onboarding({
   const [authError, setAuthError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
+  const [focusedInput, setFocusedInput] = useState('')
   const [firstName, setFirstName] = useState(profile?.name ?? '')
   const [selectedGender, setSelectedGender] = useState(profile?.gender ?? '')
   const [birthYear, setBirthYear] = useState(profile?.birth_year ?? 1990)
@@ -119,6 +187,30 @@ function Onboarding({
   useEffect(() => {
     setAuthMode(initialAuthMode)
   }, [initialAuthMode])
+
+  useEffect(() => {
+    const hasRequestedPreconnect = Array.from(document.querySelectorAll('link[rel="preconnect"]')).some(
+      (link) => link.href === 'https://fonts.googleapis.com/' || link.href === 'https://fonts.googleapis.com',
+    )
+    if (!hasRequestedPreconnect) {
+      const preconnect = document.createElement('link')
+      preconnect.rel = 'preconnect'
+      preconnect.href = 'https://fonts.googleapis.com'
+      preconnect.setAttribute('data-onboarding-fonts', 'preconnect')
+      document.head.appendChild(preconnect)
+    }
+
+    const hasFontStylesheet = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(
+      (link) => link.href.includes('IBM+Plex+Mono') && link.href.includes('Barlow+Condensed'),
+    )
+    if (!hasFontStylesheet) {
+      const stylesheet = document.createElement('link')
+      stylesheet.rel = 'stylesheet'
+      stylesheet.href = FONT_STYLESHEET_HREF
+      stylesheet.setAttribute('data-onboarding-fonts', 'stylesheet')
+      document.head.appendChild(stylesheet)
+    }
+  }, [])
 
   useEffect(() => {
     if (!user?.id) return
@@ -435,8 +527,13 @@ function Onboarding({
 
   const shellStyle = {
     minHeight: '100vh',
-    background: '#0f0f1a',
-    color: 'white',
+    background: BRAND.background,
+    color: BRAND.textPrimary,
+    '--bg-elevated': BRAND.surface,
+    '--border': BRAND.border,
+    '--text-primary': BRAND.textPrimary,
+    '--text-secondary': BRAND.textSecondary,
+    '--text-muted': BRAND.textMuted,
   }
 
   const contentTransitionStyle = {
@@ -463,11 +560,33 @@ function Onboarding({
             alignItems: 'center',
             justifyContent: 'center',
             height: '100vh',
-            background: '#0f0f1a',
+            background: BRAND.background,
           }}
         >
-          <div style={{ fontSize: '48px', fontWeight: '700', color: 'white', letterSpacing: '-2px' }}>FAILR</div>
-          <div style={{ width: '40px', height: '3px', background: '#7c3aed', borderRadius: '2px', marginTop: '12px' }} />
+          <div
+            style={{
+              fontFamily: "'IBM Plex Mono', monospace",
+              fontSize: '52px',
+              fontWeight: '700',
+              color: BRAND.accent,
+              letterSpacing: '0.05em',
+            }}
+          >
+            FAILR
+          </div>
+          <div style={{ width: '40px', height: '3px', background: BRAND.accent, borderRadius: '2px', marginTop: '12px' }} />
+          <div
+            style={{
+              fontFamily: "'Barlow', sans-serif",
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.35)',
+              marginTop: '12px',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Just Fail It
+          </div>
         </div>
       </div>
     )
@@ -487,29 +606,11 @@ function Onboarding({
           }}
         >
           <div>
-            <div style={{ textAlign: 'center', fontSize: '72px', marginBottom: '28px' }}>{currentIntro.icon}</div>
-            <h1
-              style={{
-                margin: 0,
-                textAlign: 'center',
-                fontSize: '34px',
-                lineHeight: 1.15,
-                fontWeight: 700,
-                letterSpacing: '-0.02em',
-              }}
-            >
+            <div style={{ textAlign: 'center', fontSize: '64px', marginBottom: '28px' }}>{currentIntro.icon}</div>
+            <h1 style={{ ...titleStyle('36px'), textAlign: 'center' }}>
               {currentIntro.headline}
             </h1>
-            <p
-              style={{
-                margin: '16px auto 0',
-                maxWidth: '300px',
-                textAlign: 'center',
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: '16px',
-                lineHeight: 1.6,
-              }}
-            >
+            <p style={{ ...bodyTextStyle({ margin: '16px auto 0', maxWidth: '300px', textAlign: 'center', fontSize: '16px', lineHeight: 1.6 }) }}>
               {currentIntro.subtitle}
             </p>
           </div>
@@ -523,13 +624,17 @@ function Onboarding({
                     width: index === introIndex ? '22px' : '8px',
                     height: '8px',
                     borderRadius: '999px',
-                    background: index === introIndex ? '#7c3aed' : 'rgba(255,255,255,0.2)',
+                    background: index === introIndex ? BRAND.accent : 'rgba(255,255,255,0.2)',
                     transition: 'all 0.2s ease',
                   }}
                 />
               ))}
             </div>
-            <button type="button" onClick={nextIntroScreen} style={baseButtonStyle(false)}>
+            <button
+              type="button"
+              onClick={nextIntroScreen}
+              style={baseButtonStyle(false, { padding: '16px', minHeight: 'unset', borderRadius: '8px' })}
+            >
               {currentIntro.buttonLabel}
             </button>
           </div>
@@ -548,10 +653,10 @@ function Onboarding({
           }}
         >
           <div>
-            <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            <h1 style={titleStyle('32px')}>
               {authMode === 'signup' ? 'Create your account' : 'Sign in'}
             </h1>
-            <p style={{ margin: '10px 0 28px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+            <p style={{ ...bodyTextStyle({ margin: '10px 0 28px', fontSize: '16px' }) }}>
               {authMode === 'signup' ? 'Start your journey' : 'Welcome back'}
             </p>
 
@@ -560,53 +665,29 @@ function Onboarding({
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput('')}
                 placeholder="Email"
-                style={{
-                  width: '100%',
-                  minHeight: '52px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  background: '#17172a',
-                  color: 'white',
-                  fontSize: '15px',
-                  padding: '0 16px',
-                  outline: 'none',
-                }}
+                style={authInputStyle(focusedInput === 'email')}
               />
               <input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                onFocus={() => setFocusedInput('password')}
+                onBlur={() => setFocusedInput('')}
                 placeholder="Password"
-                style={{
-                  width: '100%',
-                  minHeight: '52px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  background: '#17172a',
-                  color: 'white',
-                  fontSize: '15px',
-                  padding: '0 16px',
-                  outline: 'none',
-                }}
+                style={authInputStyle(focusedInput === 'password')}
               />
               {authMode === 'signup' ? (
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}
+                  onFocus={() => setFocusedInput('confirmPassword')}
+                  onBlur={() => setFocusedInput('')}
                   placeholder="Confirm password"
-                  style={{
-                    width: '100%',
-                    minHeight: '52px',
-                    borderRadius: '14px',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    background: '#17172a',
-                    color: 'white',
-                    fontSize: '15px',
-                    padding: '0 16px',
-                    outline: 'none',
-                  }}
+                  style={authInputStyle(focusedInput === 'confirmPassword')}
                 />
               ) : null}
             </div>
@@ -627,10 +708,10 @@ function Onboarding({
             </button>
 
             {authError ? (
-              <p style={{ margin: '12px 0 0', color: '#f87171', fontSize: '14px' }}>{authError}</p>
+              <p style={{ ...bodyTextStyle({ margin: '12px 0 0', color: '#f87171', fontSize: '14px' }) }}>{authError}</p>
             ) : null}
             {authMessage ? (
-              <p style={{ margin: '12px 0 0', color: 'rgba(255,255,255,0.68)', fontSize: '14px' }}>{authMessage}</p>
+              <p style={{ ...bodyTextStyle({ margin: '12px 0 0', color: BRAND.textSecondary, fontSize: '14px' }) }}>{authMessage}</p>
             ) : null}
 
             {authMode === 'signin' ? (
@@ -642,8 +723,9 @@ function Onboarding({
                   padding: 0,
                   background: 'transparent',
                   border: 'none',
-                  color: 'rgba(255,255,255,0.6)',
-                  fontSize: '14px',
+                  color: BRAND.accent,
+                  fontFamily: "'IBM Plex Mono', monospace",
+                  fontSize: '13px',
                   cursor: 'pointer',
                 }}
               >
@@ -663,8 +745,9 @@ function Onboarding({
                 padding: 0,
                 background: 'transparent',
                 border: 'none',
-                color: 'rgba(255,255,255,0.72)',
-                fontSize: '14px',
+                color: BRAND.accent,
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '13px',
                 cursor: 'pointer',
               }}
             >
@@ -678,8 +761,8 @@ function Onboarding({
     if (step === 6) {
       return (
         <div style={{ ...contentTransitionStyle, paddingTop: '72px', paddingBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>What should we call you?</h1>
-          <p style={{ margin: '10px 0 48px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+          <h1 style={titleStyle('32px')}>What should we call you?</h1>
+          <p style={{ ...bodyTextStyle({ margin: '10px 0 48px', fontSize: '16px' }) }}>
             We&apos;ll use this to personalize your experience
           </p>
 
@@ -693,10 +776,11 @@ function Onboarding({
               style={{
                 background: 'transparent',
                 border: 'none',
-                borderBottom: '2px solid #7c3aed',
+                borderBottom: `2px solid ${BRAND.accent}`,
                 fontSize: '28px',
                 textAlign: 'center',
-                color: 'white',
+                color: BRAND.textPrimary,
+                fontFamily: "'Barlow', sans-serif",
                 outline: 'none',
                 width: '100%',
                 padding: '8px 0',
@@ -705,7 +789,7 @@ function Onboarding({
           </div>
 
           <div style={{ marginTop: 'auto' }}>
-            {stepError ? <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }}>{stepError}</p> : null}
+            {stepError ? <p style={{ ...bodyTextStyle({ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }) }}>{stepError}</p> : null}
             <button
               type="button"
               onClick={continueWithName}
@@ -722,10 +806,10 @@ function Onboarding({
     if (step === 7) {
       return (
         <div style={{ ...contentTransitionStyle, paddingTop: '48px', paddingBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+          <h1 style={titleStyle('32px')}>
             Hey {displayName}! Tell us about yourself
           </h1>
-          <p style={{ margin: '10px 0 28px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+          <p style={{ ...bodyTextStyle({ margin: '10px 0 28px', fontSize: '16px' }) }}>
             This helps us personalize your experience
           </p>
 
@@ -738,24 +822,24 @@ function Onboarding({
                   key={option.value}
                   onClick={() => setSelectedGender(option.value)}
                   style={{
-                    background: selected ? 'rgba(124,58,237,0.2)' : '#17172a',
-                    border: selected ? '2px solid #7c3aed' : '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '16px',
+                    background: selected ? BRAND.accentDim : BRAND.surface,
+                    border: selected ? `2px solid ${BRAND.accent}` : `1px solid ${BRAND.border}`,
+                    borderRadius: '12px',
                     padding: '20px 8px',
                     textAlign: 'center',
                     cursor: 'pointer',
-                    color: 'white',
+                    color: selected ? BRAND.accent : BRAND.textPrimary,
                   }}
                 >
                   <div style={{ fontSize: '30px', marginBottom: '10px' }}>{option.emoji}</div>
-                  <div style={{ fontSize: '15px', fontWeight: 600 }}>{option.label}</div>
+                  <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '15px', fontWeight: 700 }}>{option.label}</div>
                 </button>
               )
             })}
           </div>
 
           <div style={{ marginTop: 'auto' }}>
-            {stepError ? <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }}>{stepError}</p> : null}
+            {stepError ? <p style={{ ...bodyTextStyle({ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }) }}>{stepError}</p> : null}
             <button
               type="button"
               onClick={continueWithGender}
@@ -772,14 +856,14 @@ function Onboarding({
     if (step === 8) {
       return (
         <div style={{ ...contentTransitionStyle, paddingTop: '48px', paddingBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>Your body stats</h1>
-          <p style={{ margin: '10px 0 28px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+          <h1 style={titleStyle('32px')}>Your body stats</h1>
+          <p style={{ ...bodyTextStyle({ margin: '10px 0 28px', fontSize: '16px' }) }}>
             Used to calculate your training metrics
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
             <div>
-              <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>Birth year</p>
+              <p style={{ ...monoLabelStyle({ margin: '0 0 12px', textAlign: 'center' }) }}>Birth year</p>
               <ScrollWheel
                 value={birthYear}
                 onChange={setBirthYear}
@@ -790,7 +874,7 @@ function Onboarding({
               />
             </div>
             <div>
-              <p style={{ margin: '0 0 12px', fontSize: '13px', color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>Height (cm)</p>
+              <p style={{ ...monoLabelStyle({ margin: '0 0 12px', textAlign: 'center' }) }}>Height (cm)</p>
               <ScrollWheel
                 value={heightCm}
                 onChange={setHeightCm}
@@ -803,7 +887,7 @@ function Onboarding({
           </div>
 
           <div style={{ marginTop: 'auto' }}>
-            {stepError ? <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }}>{stepError}</p> : null}
+            {stepError ? <p style={{ ...bodyTextStyle({ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }) }}>{stepError}</p> : null}
             <button type="button" onClick={continueWithStats} disabled={stepLoading} style={baseButtonStyle(stepLoading)}>
               {stepLoading ? 'Saving...' : 'Continue'}
             </button>
@@ -815,8 +899,8 @@ function Onboarding({
     if (step === 9) {
       return (
         <div style={{ ...contentTransitionStyle, paddingTop: '48px', paddingBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>Your starting weight</h1>
-          <p style={{ margin: '10px 0 28px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+          <h1 style={titleStyle('32px')}>Your starting weight</h1>
+          <p style={{ ...bodyTextStyle({ margin: '10px 0 28px', fontSize: '16px' }) }}>
             Used for bodyweight exercise volume
           </p>
 
@@ -829,11 +913,11 @@ function Onboarding({
               max={200}
               format={(value) => formatMetricValue(value)}
             />
-            <p style={{ margin: '10px 0 0', textAlign: 'center', color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>kg</p>
+            <p style={{ ...monoLabelStyle({ margin: '10px 0 0', textAlign: 'center', fontSize: '13px', color: BRAND.textSecondary }) }}>kg</p>
           </div>
 
           <div style={{ marginTop: 'auto' }}>
-            {stepError ? <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }}>{stepError}</p> : null}
+            {stepError ? <p style={{ ...bodyTextStyle({ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }) }}>{stepError}</p> : null}
             <button type="button" onClick={continueWithWeight} disabled={stepLoading} style={baseButtonStyle(stepLoading)}>
               {stepLoading ? 'Saving...' : 'Continue'}
             </button>
@@ -845,8 +929,8 @@ function Onboarding({
     if (step === 10) {
       return (
         <div style={{ ...contentTransitionStyle, paddingTop: '48px', paddingBottom: '16px' }}>
-          <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>What&apos;s your main goal?</h1>
-          <p style={{ margin: '10px 0 24px', color: 'rgba(255,255,255,0.65)', fontSize: '16px' }}>
+          <h1 style={titleStyle('32px')}>What&apos;s your main goal?</h1>
+          <p style={{ ...bodyTextStyle({ margin: '10px 0 24px', fontSize: '16px' }) }}>
             This shapes your experience in FAILR
           </p>
 
@@ -861,10 +945,10 @@ function Onboarding({
                   style={{
                     width: '100%',
                     minHeight: '80px',
-                    borderRadius: '16px',
-                    border: selected ? '2px solid #7c3aed' : '1px solid rgba(255,255,255,0.1)',
-                    background: selected ? 'rgba(124,58,237,0.2)' : '#17172a',
-                    color: 'white',
+                    borderRadius: '12px',
+                    border: selected ? `2px solid ${BRAND.accent}` : `1px solid ${BRAND.border}`,
+                    background: selected ? BRAND.accentDim : BRAND.surface,
+                    color: selected ? BRAND.accent : BRAND.textPrimary,
                     cursor: 'pointer',
                     padding: '18px 16px',
                     textAlign: 'left',
@@ -873,8 +957,8 @@ function Onboarding({
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div style={{ fontSize: '30px' }}>{option.emoji}</div>
                     <div>
-                      <div style={{ fontSize: '17px', fontWeight: 600 }}>{option.title}</div>
-                      <div style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.65)' }}>{option.subtitle}</div>
+                      <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '17px', fontWeight: 700 }}>{option.title}</div>
+                      <div style={{ ...bodyTextStyle({ marginTop: '4px', fontSize: '13px', color: selected ? BRAND.accent : BRAND.textSecondary }) }}>{option.subtitle}</div>
                     </div>
                   </div>
                 </button>
@@ -883,7 +967,7 @@ function Onboarding({
           </div>
 
           <div style={{ marginTop: 'auto' }}>
-            {stepError ? <p style={{ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }}>{stepError}</p> : null}
+            {stepError ? <p style={{ ...bodyTextStyle({ margin: '0 0 12px', color: '#f87171', fontSize: '14px' }) }}>{stepError}</p> : null}
             <button
               type="button"
               onClick={continueWithGoal}
@@ -909,36 +993,40 @@ function Onboarding({
         }}
       >
         <div style={{ fontSize: '58px', marginBottom: '18px' }}>⚡</div>
-        <h1 style={{ margin: 0, fontSize: '34px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <h1 style={{ ...titleStyle('36px'), textAlign: 'center' }}>
           You&apos;re ready, {displayName}!
         </h1>
-        <p style={{ margin: '12px 0 24px', color: 'rgba(255,255,255,0.68)', fontSize: '16px' }}>
+        <p style={{ ...bodyTextStyle({ margin: '12px 0 24px', fontSize: '16px', textAlign: 'center' }) }}>
           Time to go beyond your limits.
         </p>
 
         <div
           style={{
             width: '100%',
-            borderRadius: '18px',
-            border: '1px solid rgba(255,255,255,0.08)',
-            background: '#17172a',
-            padding: '18px',
+            borderRadius: '12px',
+            border: `1px solid ${BRAND.border}`,
+            background: BRAND.surface,
+            padding: '20px',
             marginBottom: '28px',
             textAlign: 'left',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: '10px' }}>
-            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Name</span>
-            <span style={{ color: 'white', fontSize: '15px', fontWeight: 600 }}>{displayName}</span>
+            <span style={{ ...monoLabelStyle({ fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em' }) }}>Name</span>
+            <span style={{ fontFamily: "'Barlow', sans-serif", color: BRAND.textPrimary, fontSize: '16px' }}>{displayName}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-            <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Goal</span>
-            <span style={{ color: '#c4b5fd', fontSize: '15px', fontWeight: 600 }}>{goalSummary}</span>
+            <span style={{ ...monoLabelStyle({ fontSize: '11px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em' }) }}>Goal</span>
+            <span style={{ fontFamily: "'Barlow', sans-serif", color: BRAND.textPrimary, fontSize: '16px' }}>{goalSummary}</span>
           </div>
         </div>
 
-        <button type="button" onClick={finishOnboarding} style={baseButtonStyle(false)}>
-          Log my first set
+        <button
+          type="button"
+          onClick={finishOnboarding}
+          style={baseButtonStyle(false, { fontSize: '15px', padding: '18px', minHeight: 'unset' })}
+        >
+          LOG MY FIRST SET →
         </button>
       </div>
     )
@@ -966,7 +1054,7 @@ function Onboarding({
                 height: '36px',
                 border: 'none',
                 background: 'transparent',
-                color: 'white',
+                color: 'rgba(255,255,255,0.5)',
                 fontSize: '26px',
                 cursor: 'pointer',
                 padding: 0,
@@ -985,8 +1073,11 @@ function Onboarding({
               style={{
                 border: 'none',
                 background: 'transparent',
-                color: 'rgba(255,255,255,0.6)',
-                fontSize: '14px',
+                fontFamily: "'IBM Plex Mono', monospace",
+                color: 'rgba(255,255,255,0.35)',
+                fontSize: '12px',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
                 cursor: 'pointer',
                 padding: 0,
               }}
@@ -999,13 +1090,12 @@ function Onboarding({
         </div>
 
         {showProgress ? (
-          <div style={{ height: '3px', borderRadius: '999px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginTop: '8px' }}>
+          <div style={{ height: '3px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginTop: '8px' }}>
             <div
               style={{
                 width: `${(progress / 5) * 100}%`,
                 height: '100%',
-                background: '#7c3aed',
-                borderRadius: '999px',
+                background: BRAND.accent,
                 transition: 'width 0.25s ease',
               }}
             />
