@@ -47,6 +47,20 @@ const rests = [
 const LS_TIMER_START = 'timerStartedAt'
 const LS_TIMER_DURATION = 'timerDuration'
 const LS_TIMER_EXERCISE = 'timerExerciseName'
+const BODYWEIGHT_KEYWORDS = [
+  'push up',
+  'pull up',
+  'chin up',
+  'dip',
+  'sit up',
+  'crunch',
+  'plank',
+  'burpee',
+  'lunge',
+  'squat jump',
+  'box jump',
+  'muscle up',
+]
 
 function clearRestTimerLocalStorage() {
   localStorage.removeItem(LS_TIMER_START)
@@ -54,8 +68,20 @@ function clearRestTimerLocalStorage() {
   localStorage.removeItem(LS_TIMER_EXERCISE)
 }
 
+function isDefaultBodyweightExercise(name) {
+  const normalizedName = String(name ?? '')
+    .toLowerCase()
+    .replace(/[-_]+/g, ' ')
+  return BODYWEIGHT_KEYWORDS.some((keyword) => normalizedName.includes(keyword))
+}
+
 function formatWeight(value) {
   return value % 1 === 0 ? `${value}` : value.toFixed(1)
+}
+
+function formatLoggedSet(item) {
+  if (item?.is_bodyweight) return `BW × ${item.reps}`
+  return `${formatWeight(item.weight)} kg × ${item.reps}`
 }
 
 function rirBadgeStyle(rir) {
@@ -65,8 +91,9 @@ function rirBadgeStyle(rir) {
 }
 
 function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
-  const [weight, setWeight] = useState(20)
+  const [weight, setWeight] = useState(0)
   const [reps, setReps] = useState(8)
+  const [isBodyweight, setIsBodyweight] = useState(false)
   const [rir, setRir] = useState(null)
   const [restSeconds, setRestSeconds] = useState(90)
   const [restActive, setRestActive] = useState(false)
@@ -88,6 +115,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [saving, setSaving] = useState(false)
 
   const canLog = rir !== null
+  const defaultToBodyweight = useMemo(() => isDefaultBodyweightExercise(exercise?.name), [exercise?.name])
 
   const prevExerciseId = useRef(null)
 
@@ -109,7 +137,8 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setContractTarget(null)
     setContractAccepted(false)
     setContractFlash('default')
-  }, [exercise?.id])
+    setIsBodyweight(defaultToBodyweight)
+  }, [defaultToBodyweight, exercise?.id])
 
   useEffect(() => {
     if (open) return
@@ -147,27 +176,29 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       setLastSessionSets(previous)
       if (entries[0]) {
         setLastSet(entries[0])
-        setWeight(entries[0].weight)
+        setWeight(entries[0].weight ?? 0)
         setReps(entries[0].reps)
         setRestSeconds(entries[0].rest_seconds ?? 90)
       } else if (previous[0]) {
         setLastSet(null)
-        setWeight(previous[0].weight ?? 20)
+        setWeight(previous[0].weight ?? 0)
         setReps(previous[0].reps ?? 8)
         setRestSeconds(previous[0].rest_seconds ?? 90)
-        if (entries.length === 0) {
+        if (entries.length === 0 && !defaultToBodyweight && !previous[0].is_bodyweight) {
           setShowContract(true)
           setSelectedContractPath('A')
+        } else {
+          setShowContract(false)
         }
       } else {
         setLastSet(null)
-        setWeight(20)
+        setWeight(0)
         setReps(8)
         setRestSeconds(90)
         setShowContract(false)
       }
     })
-  }, [open, userId, exercise?.id, exercise?.name])
+  }, [defaultToBodyweight, open, userId, exercise?.id, exercise?.name])
 
   const volume = useMemo(() => Number((weight * reps).toFixed(2)), [weight, reps])
 
@@ -291,10 +322,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const baselineSet = lastSessionSets[0]
   const contractPathA = baselineSet
     ? { weight: baselineSet.weight, reps: baselineSet.reps + 1 }
-    : { weight: 20, reps: 8 }
+    : { weight: 0, reps: 8 }
   const contractPathB = baselineSet
-    ? { weight: Number((Number(baselineSet.weight) + 2.5).toFixed(1)), reps: baselineSet.reps }
-    : { weight: 22.5, reps: 8 }
+    ? { weight: Number((Number(baselineSet.weight) + 1).toFixed(1)), reps: baselineSet.reps }
+    : { weight: 1, reps: 8 }
 
   const acceptContract = () => {
     const target = selectedContractPath === 'A' ? contractPathA : contractPathB
@@ -317,10 +348,27 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       navigator.vibrate(50)
     }
     setSaving(true)
+
+    let loggedWeight = Number(weight)
+    let bodyweightSet = false
+
+    if (isBodyweight) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('weight_kg')
+        .eq('id', userId)
+        .maybeSingle()
+
+      loggedWeight = profile?.weight_kg == null ? 0 : Number(profile.weight_kg)
+      bodyweightSet = true
+      setWeight(loggedWeight)
+    }
+
     const { error } = await supabase.from('sets').insert({
       user_id: userId,
       exercise_name: exercise.name,
-      weight: Number(weight),
+      weight: loggedWeight,
+      is_bodyweight: bodyweightSet,
       reps: Number(reps),
       rir: Number.parseInt(rir, 10),
       rest_seconds: Number(restSeconds),
@@ -341,7 +389,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
       setContractFlash('default')
     }
 
-    const setVolume = Number((Number(weight) * Number(reps)).toFixed(2))
+    const setVolume = Number((loggedWeight * Number(reps)).toFixed(2))
     const { data: currentPRs } = await supabase
       .from('personal_records')
       .select('*')
@@ -350,7 +398,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
 
     const weightPR = (currentPRs ?? []).find((item) => item.pr_type === 'weight')
     const volumePR = (currentPRs ?? []).find((item) => item.pr_type === 'volume')
-    const isWeightPR = !weightPR || Number(weight) > Number(weightPR.value)
+    const isWeightPR = !weightPR || loggedWeight > Number(weightPR.value)
     const isVolumePR = !volumePR || setVolume > Number(volumePR.value)
 
     if (isWeightPR) {
@@ -359,7 +407,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           user_id: userId,
           exercise_name: exercise.name,
           pr_type: 'weight',
-          value: Number(weight),
+          value: loggedWeight,
           achieved_at: new Date().toISOString(),
         },
         { onConflict: 'user_id,exercise_name,pr_type' },
@@ -442,7 +490,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
               {lastSessionSets.slice(0, 5).map((item) => (
                 <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
-                    {formatWeight(item.weight)} kg × {item.reps}
+                    {formatLoggedSet(item)}
                   </span>
                   <span
                     style={{
@@ -487,22 +535,60 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
           </div>
         ) : null}
 
+        <button
+          type="button"
+          onClick={() => setIsBodyweight((prev) => !prev)}
+          style={{
+            display: 'block',
+            margin: '0 auto 12px',
+            padding: '6px 16px',
+            borderRadius: '20px',
+            border: isBodyweight ? '1px solid #7c3aed' : '1px solid rgba(255,255,255,0.2)',
+            background: isBodyweight ? 'rgba(124,58,237,0.2)' : 'transparent',
+            color: isBodyweight ? '#c4b5fd' : 'rgba(255,255,255,0.5)',
+            fontSize: '13px',
+            cursor: 'pointer',
+          }}
+        >
+          {isBodyweight ? '✓ Bodyweight' : 'Bodyweight exercise?'}
+        </button>
+
         <div className="mb-2 flex items-center gap-3">
           <div className="flex-1">
-            <ScrollWheel
-              value={weight}
-              onChange={setWeight}
-              step={2.5}
-              min={2.5}
-              format={(item) => `${formatWeight(item)} kg`}
-            />
+            {isBodyweight ? (
+              <div
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: '28px',
+                  fontWeight: '500',
+                  color: 'white',
+                  height: '96px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                BW
+              </div>
+            ) : (
+              <ScrollWheel
+                value={weight}
+                onChange={setWeight}
+                step={1}
+                min={0}
+                format={(item) => `${formatWeight(item)} kg`}
+              />
+            )}
           </div>
-          <div className="text-3xl text-white/60">×</div>
+          {isBodyweight ? null : <div className="text-3xl text-white/60">×</div>}
           <div className="flex-1">
             <ScrollWheel value={reps} onChange={setReps} step={1} min={1} format={(item) => `${item}`} />
           </div>
         </div>
-        <p className="mb-4 text-center text-sm" style={{ color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace" }}>Volume this set: {formatWeight(volume)} kg</p>
+        <p className="mb-4 text-center text-sm" style={{ color: 'var(--accent)', fontFamily: "'IBM Plex Mono', monospace" }}>
+          {isBodyweight ? `Volume this set: ${reps} reps (bodyweight)` : `Volume this set: ${formatWeight(volume)} kg`}
+        </p>
 
         <p style={{ color: 'white', fontSize: '15px', fontWeight: '500', marginBottom: '10px' }}>
           How did you feel after this set?

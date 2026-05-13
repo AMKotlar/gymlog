@@ -1,7 +1,11 @@
 import { useMemo, useRef } from 'react'
 
+function clamp(value, min) {
+  return Number(Math.max(min, value).toFixed(2))
+}
+
 function normalize(value, step, min) {
-  const adjusted = Math.max(min, value)
+  const adjusted = clamp(value, min)
   const steps = Math.round((adjusted - min) / step)
   return Number((min + steps * step).toFixed(2))
 }
@@ -10,7 +14,16 @@ function ScrollWheel({ value, onChange, step, min, format = (v) => `${v}` }) {
   const dragState = useRef({ active: false, y: 0 })
 
   const values = useMemo(() => {
-    return [-2, -1, 0, 1, 2].map((offset) => normalize(value + offset * step, step, min))
+    const currentValue = clamp(value, min)
+    const normalizedValue = normalize(currentValue, step, min)
+
+    return [
+      normalize(normalizedValue - 2 * step, step, min),
+      normalize(normalizedValue - step, step, min),
+      currentValue,
+      normalize(normalizedValue + step, step, min),
+      normalize(normalizedValue + 2 * step, step, min),
+    ]
   }, [value, step, min])
 
   const updateFromDelta = (deltaY) => {
