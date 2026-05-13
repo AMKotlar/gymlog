@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { recalculatePRForExercise } from '../components/PRRecalculator'
 import ExerciseSearch from '../components/ExerciseSearch'
 import LogSetScreen from '../components/LogSetScreen'
@@ -67,6 +68,8 @@ function getSuggestedSession(recentSessions) {
 }
 
 function Home({ user, onPRUpdate }) {
+  const location = useLocation()
+  const navigate = useNavigate()
   const [sets, setSets] = useState([])
   const [searchOpen, setSearchOpen] = useState(false)
   const [exercise, setExercise] = useState(null)
@@ -109,6 +112,12 @@ function Home({ user, onPRUpdate }) {
   useEffect(() => {
     fetchTodaySets()
   }, [user.id])
+
+  useEffect(() => {
+    if (!location.state?.openExerciseSearch) return
+    setSearchOpen(true)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state, navigate])
 
   useEffect(() => {
     supabase

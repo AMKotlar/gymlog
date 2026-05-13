@@ -7,8 +7,6 @@ import Home from './pages/Home'
 import History from './pages/History'
 import Onboarding from './pages/Onboarding'
 import Profile from './pages/Profile'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
 import Stats from './pages/Stats'
 
 function AppShell({ user, onPRUpdate, prVersion }) {
@@ -31,7 +29,11 @@ function AppShell({ user, onPRUpdate, prVersion }) {
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [onboardingDone, setOnboardingDone] = useState(null)
+  const [onboardingComplete, setOnboardingComplete] = useState(
+    () => localStorage.getItem('onboardingComplete') === 'true',
+  )
+  const [profile, setProfile] = useState(null)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [prVersion, setPrVersion] = useState(0)
   const onPRUpdate = () => setPrVersion((v) => v + 1)
 
@@ -51,18 +53,49 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!session?.user?.id) return
+    if (!session?.user?.id) {
+      setProfile(null)
+      setProfileLoading(false)
+      return
+    }
+
+    setProfileLoading(true)
     supabase
       .from('profiles')
-      .select('onboarding_completed')
+      .select('name, gender, birth_year, height_cm, weight_kg, goal')
       .eq('id', session.user.id)
       .maybeSingle()
       .then(({ data }) => {
-        setOnboardingDone(data?.onboarding_completed ?? false)
+        setProfile(data ?? null)
+        const savedStep = Number(localStorage.getItem('onboardingStep'))
+        const hasSavedOnboardingStep = Number.isFinite(savedStep) && savedStep >= 6 && savedStep <= 11
+        if (data?.name && data?.goal && !hasSavedOnboardingStep) {
+          localStorage.setItem('onboardingComplete', 'true')
+          localStorage.removeItem('onboardingStep')
+          setOnboardingComplete(true)
+        }
+      })
+      .finally(() => {
+        setProfileLoading(false)
       })
   }, [session?.user?.id])
 
-  if (loading) {
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('onboardingComplete', 'true')
+    localStorage.removeItem('onboardingStep')
+    setOnboardingComplete(true)
+  }
+
+  const savedOnboardingStep = Number(localStorage.getItem('onboardingStep'))
+  const onboardingStep =
+    Number.isFinite(savedOnboardingStep) && savedOnboardingStep >= 6 && savedOnboardingStep <= 11
+      ? savedOnboardingStep
+      : profile?.name
+        ? 7
+        : 6
+  const hasCompletedProfile = Boolean(profile?.name && profile?.goal)
+
+  if (loading || (session && profileLoading)) {
     return (
       <div
         style={{
@@ -103,23 +136,39 @@ function App() {
       <Routes>
         <Route
           path="/signin"
-          element={session ? <Navigate to="/" replace /> : <SignIn />}
+          element={
+            session ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Onboarding
+                initialStep={5}
+                initialAuthMode="signin"
+                signInOnly
+                onComplete={handleOnboardingComplete}
+              />
+            )
+          }
         />
         <Route
           path="/signup"
-          element={session ? <Navigate to="/" replace /> : <SignUp />}
+          element={<Navigate to="/" replace />}
         />
         <Route
           path="/*"
           element={
             session ? (
-              onboardingDone === null ? null : onboardingDone === false ? (
-                <Onboarding userId={session.user.id} onComplete={() => setOnboardingDone(true)} />
+              !profile?.name || (!onboardingComplete && !hasCompletedProfile) ? (
+                <Onboarding
+                  user={session.user}
+                  profile={profile}
+                  initialStep={onboardingStep}
+                  onComplete={handleOnboardingComplete}
+                />
               ) : (
                 <AppShell user={session.user} onPRUpdate={onPRUpdate} prVersion={prVersion} />
               )
             ) : (
-              <Navigate to="/signin" replace />
+              onboardingComplete ? <Navigate to="/signin" replace /> : <Onboarding onComplete={handleOnboardingComplete} />
             )
           }
         />

@@ -1,35 +1,35 @@
 import { useMemo, useRef } from 'react'
 
-function clamp(value, min) {
-  return Number(Math.max(min, value).toFixed(2))
+function clamp(value, min, max) {
+  return Number(Math.min(max, Math.max(min, value)).toFixed(2))
 }
 
-function normalize(value, step, min) {
-  const adjusted = clamp(value, min)
+function normalize(value, step, min, max) {
+  const adjusted = clamp(value, min, max)
   const steps = Math.round((adjusted - min) / step)
-  return Number((min + steps * step).toFixed(2))
+  return clamp(Number((min + steps * step).toFixed(2)), min, max)
 }
 
-function ScrollWheel({ value, onChange, step, min, format = (v) => `${v}` }) {
+function ScrollWheel({ value, onChange, step, min, max = Number.POSITIVE_INFINITY, format = (v) => `${v}` }) {
   const dragState = useRef({ active: false, y: 0 })
 
   const values = useMemo(() => {
-    const currentValue = clamp(value, min)
-    const normalizedValue = normalize(currentValue, step, min)
+    const currentValue = clamp(value, min, max)
+    const normalizedValue = normalize(currentValue, step, min, max)
 
     return [
-      normalize(normalizedValue - 2 * step, step, min),
-      normalize(normalizedValue - step, step, min),
+      normalize(normalizedValue - 2 * step, step, min, max),
+      normalize(normalizedValue - step, step, min, max),
       currentValue,
-      normalize(normalizedValue + step, step, min),
-      normalize(normalizedValue + 2 * step, step, min),
+      normalize(normalizedValue + step, step, min, max),
+      normalize(normalizedValue + 2 * step, step, min, max),
     ]
-  }, [value, step, min])
+  }, [max, min, step, value])
 
   const updateFromDelta = (deltaY) => {
     if (Math.abs(deltaY) < 16) return
     const stepsMoved = Math.trunc(deltaY / 16)
-    const nextValue = normalize(value + stepsMoved * step, step, min)
+    const nextValue = normalize(value + stepsMoved * step, step, min, max)
     if (nextValue !== value) {
       onChange(nextValue)
     }
