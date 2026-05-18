@@ -42,6 +42,11 @@ const tabs = [
     ),
   },
   {
+    label: 'Library',
+    path: '/library',
+    icon: <span style={{ fontSize: '20px', lineHeight: 1 }}>📖</span>,
+  },
+  {
     label: 'Profile',
     path: '/profile',
     icon: (

@@ -5,6 +5,7 @@ import BottomNav from './components/BottomNav'
 import InstallPrompt from './components/InstallPrompt'
 import Home from './pages/Home'
 import History from './pages/History'
+import Library from './pages/Library'
 import Onboarding from './pages/Onboarding'
 import Profile from './pages/Profile'
 import Stats from './pages/Stats'
@@ -15,6 +16,7 @@ function AppShell({ user, onPRUpdate, prVersion }) {
       <Routes>
         <Route path="/" element={<Home user={user} onPRUpdate={onPRUpdate} />} />
         <Route path="/history" element={<History user={user} onPRUpdate={onPRUpdate} />} />
+        <Route path="/library" element={<Library user={user} />} />
         <Route path="/stats" element={<Stats user={user} prVersion={prVersion} />} />
         <Route path="/prs" element={<Navigate to="/stats" replace />} />
         <Route path="/profile" element={<Profile user={user} />} />

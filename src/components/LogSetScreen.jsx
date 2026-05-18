@@ -113,8 +113,10 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
   const [contractAccepted, setContractAccepted] = useState(false)
   const [contractFlash, setContractFlash] = useState('default')
   const [saving, setSaving] = useState(false)
+  const [cueOpen, setCueOpen] = useState(false)
 
   const canLog = rir !== null
+  const hasCues = Boolean(exercise?.cue_imagine || exercise?.cue_feel || exercise?.cue_avoid)
   const defaultToBodyweight = useMemo(() => isDefaultBodyweightExercise(exercise?.name), [exercise?.name])
 
   const prevExerciseId = useRef(null)
@@ -138,6 +140,7 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
     setContractAccepted(false)
     setContractFlash('default')
     setIsBodyweight(defaultToBodyweight)
+    setCueOpen(false)
   }, [defaultToBodyweight, exercise?.id])
 
   useEffect(() => {
@@ -532,6 +535,52 @@ function LogSetScreen({ open, userId, exercise, onClose, onLogged }) {
             }}
           >
             CONTRACT: {contractTarget.weight} kg × {contractTarget.reps}
+          </div>
+        ) : null}
+
+        {hasCues ? (
+          <div style={{ margin: '0 0 14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <button
+              type="button"
+              onClick={() => setCueOpen((prev) => !prev)}
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                background: '#111111',
+                border: 'none',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#CCFF00', letterSpacing: '0.05em' }}>
+                💡 HOW TO FEEL THIS
+              </span>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{cueOpen ? '▲' : '▼'}</span>
+            </button>
+            {cueOpen ? (
+              <div style={{ padding: '12px 14px', background: '#0d0d0d', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {exercise.cue_imagine ? (
+                  <div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Imagine</div>
+                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '14px', color: 'white', lineHeight: '1.5' }}>{exercise.cue_imagine}</div>
+                  </div>
+                ) : null}
+                {exercise.cue_feel ? (
+                  <div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Feel it in</div>
+                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '14px', color: '#CCFF00', lineHeight: '1.5' }}>{exercise.cue_feel}</div>
+                  </div>
+                ) : null}
+                {exercise.cue_avoid ? (
+                  <div>
+                    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '3px' }}>Avoid</div>
+                    <div style={{ fontFamily: "'Barlow', sans-serif", fontSize: '14px', color: '#ef4444', lineHeight: '1.5' }}>{exercise.cue_avoid}</div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 
